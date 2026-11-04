@@ -1,0 +1,63 @@
+/* =====================================================================
+   BASE.CSS — cores (variáveis) e componentes reaproveitáveis.
+   Para mudar a cor de um negócio, use o painel (Meu negócio > Cor) ou
+   o tema do nicho em nichos.js. Aqui ficam só os valores padrão.
+   ===================================================================== */
+:root {
+  --c-brand: 190 24 93; --c-brand-contrast: 255 255 255; --c-accent: 251 207 232;
+  --c-bg: 255 252 250; --c-surface: 255 255 255; --c-text: 28 22 26; --c-muted: 110 98 105; --c-line: 238 228 232;
+  --font-display: 'Playfair Display';
+}
+html { scroll-behavior: smooth; }
+body { background: rgb(var(--c-bg)); color: rgb(var(--c-text)); font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+
+/* Componentes (prefixo "html" para vencer o reset do Tailwind) */
+html .section { max-width: 72rem; margin: 0 auto; padding: 4rem 1rem; }
+@media (min-width: 768px) { html .section { padding: 6rem 1rem; } }
+html .eyebrow { display: inline-flex; align-items: center; gap: .5rem; border-radius: 999px; background: rgb(var(--c-brand) / .1); color: rgb(var(--c-brand)); padding: .25rem .75rem; font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+html .h2 { font-family: var(--font-display), serif; font-size: 1.875rem; line-height: 1.15; font-weight: 700; letter-spacing: -.01em; }
+@media (min-width: 768px) { html .h2 { font-size: 2.25rem; } }
+html .lead { margin-top: .75rem; color: rgb(var(--c-muted)); font-size: 1rem; max-width: 42rem; }
+@media (min-width: 768px) { html .lead { font-size: 1.125rem; } }
+html .card { border-radius: 1rem; background: rgb(var(--c-surface)); border: 1px solid rgb(var(--c-line)); }
+
+:where(.btn) { display: inline-flex; }  /* sem especificidade: "hidden", "sm:inline-flex" etc. sempre vencem */
+.btn { align-items: center; justify-content: center; gap: .5rem; border-radius: 999px; padding: .625rem 1.25rem; font-size: .875rem; font-weight: 600; line-height: 1.25rem; transition: filter .15s, background-color .15s, border-color .15s, color .15s, transform .1s; cursor: pointer; white-space: nowrap; }
+.btn:active { transform: scale(.98); }
+.btn:disabled, .btn[aria-disabled="true"] { opacity: .4; pointer-events: none; }
+html .btn-primary { background: rgb(var(--c-brand)); color: rgb(var(--c-brand-contrast)); box-shadow: 0 1px 2px rgb(0 0 0 / .08); }
+html .btn-primary:hover { filter: brightness(1.1); }
+html .btn-ghost { border: 1px solid rgb(var(--c-line)); background: transparent; color: inherit; }
+html .btn-ghost:hover { border-color: rgb(var(--c-brand)); color: rgb(var(--c-brand)); }
+html .btn-wa { background: #25D366; color: #fff; }
+html .btn-wa:hover { filter: brightness(1.05); }
+html .btn-danger { border: 1px solid rgb(220 38 38 / .4); color: rgb(220 38 38); background: transparent; }
+html .btn-danger:hover { background: rgb(220 38 38 / .08); }
+html .btn-sm { padding: .375rem .75rem; font-size: .8125rem; }
+
+html .chip { flex-shrink: 0; border-radius: 999px; border: 1px solid rgb(var(--c-line)); padding: .5rem 1rem; font-size: .875rem; background: transparent; color: inherit; transition: border-color .15s; cursor: pointer; }
+html .chip:hover { border-color: rgb(var(--c-brand)); }
+html .chip-on, html .chip-on:hover { background: rgb(var(--c-brand)); color: rgb(var(--c-brand-contrast)); border-color: rgb(var(--c-brand)); }
+
+html .input { width: 100%; border-radius: .75rem; border: 1px solid rgb(var(--c-line)); background: rgb(var(--c-bg)); color: rgb(var(--c-text)); padding: .75rem 1rem; font-size: 1rem; }
+html .input::placeholder { color: rgb(var(--c-muted) / .7); }
+html .input:focus { outline: none; border-color: rgb(var(--c-brand)); box-shadow: 0 0 0 3px rgb(var(--c-brand) / .25); }
+:where(.label) { display: grid; }
+html .label { gap: .25rem; font-size: .875rem; font-weight: 500; }
+html .label > small { font-weight: 400; color: rgb(var(--c-muted)); }
+
+/* Utilidades */
+/* Grade de 1 coluna que nunca "estoura" a tela no celular (qualquer grid-cols-* sobrescreve) */
+:where(.grid) { grid-template-columns: minmax(0, 1fr); }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+.reveal { opacity: 0; transform: translateY(16px); transition: opacity .6s ease, transform .6s ease; }
+.reveal.is-visible { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } html { scroll-behavior: auto; } }
+dialog { color: rgb(var(--c-text)); }
+dialog::backdrop { background: rgb(0 0 0 / .65); }
+details > summary { list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
+details[open] .faq-icon { transform: rotate(45deg); }
+.skeleton { background: linear-gradient(90deg, rgb(var(--c-line) / .6), rgb(var(--c-line)), rgb(var(--c-line) / .6)); background-size: 200% 100%; animation: sk 1.2s infinite; border-radius: .75rem; }
+@keyframes sk { to { background-position: -200% 0; } }
