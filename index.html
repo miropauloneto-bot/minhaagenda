@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agenda online para salões, barbearias e estética</title>
+  <meta name="description" content="Página de agendamento com link para a bio, agenda sem conflito de horários e lembretes pelo WhatsApp para salões, barbearias, esmalterias, estética, spas, lash designers e estúdios de tatuagem.">
+  <meta name="theme-color" content="#6d28d9">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/tailwind-tema.js"></script>
+  <link rel="stylesheet" href="assets/base.css">
+</head>
+<body class="bg-page text-ink">
+
+  <!-- ===== CABEÇALHO ===== -->
+  <header class="sticky top-0 z-40 bg-page/85 backdrop-blur border-b border-line">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
+      <a href="#" class="flex items-center gap-2 font-display text-xl font-bold">
+        <span class="w-9 h-9 rounded-xl bg-brand text-brand-contrast flex items-center justify-center"><i data-lucide="calendar-check" class="w-5 h-5"></i></span>
+        <span data-slot="produto"></span>
+      </a>
+      <nav class="hidden md:flex items-center gap-7 text-sm text-muted">
+        <a href="#demos" class="hover:text-brand">Demonstrações</a>
+        <a href="#recursos" class="hover:text-brand">Recursos</a>
+        <a href="#planos" class="hover:text-brand">Planos</a>
+        <a href="#faq" class="hover:text-brand">Dúvidas</a>
+      </nav>
+      <div class="flex items-center gap-2">
+        <a href="painel/" class="btn btn-ghost btn-sm">Entrar</a>
+        <a data-wa-vendas="Olá! Quero ver uma demonstração da agenda online para o meu negócio." class="btn btn-primary btn-sm hidden sm:inline-flex">Quero uma demonstração</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ===== HERO ===== -->
+    <section class="relative overflow-hidden">
+      <div class="absolute inset-0 -z-10 bg-gradient-to-b from-accent/60 via-page to-page"></div>
+      <div class="section grid lg:grid-cols-2 gap-12 items-center" style="padding-top:3rem">
+        <div>
+          <span class="eyebrow">Para beleza, estética e bem-estar</span>
+          <h1 class="mt-5 font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.08] tracking-tight">Pare de marcar horário <span class="text-brand">no caderno e no WhatsApp</span></h1>
+          <p class="mt-5 text-lg text-muted max-w-xl">Seu cliente escolhe serviço, profissional e horário sozinho, por um link na bio do Instagram. Você abre o painel e a agenda do dia já está pronta, sem conflito de horário.</p>
+          <div class="mt-8 flex flex-col sm:flex-row gap-3">
+            <a href="#demos" class="btn btn-primary !px-7 !py-3.5 !text-base"><i data-lucide="play" class="w-5 h-5"></i>Ver demonstração</a>
+            <a data-wa-vendas="Olá! Quero colocar a agenda online no meu negócio." class="btn btn-wa !px-7 !py-3.5 !text-base"><i data-lucide="message-circle" class="w-5 h-5"></i>Falar no WhatsApp</a>
+          </div>
+          <ul class="mt-8 grid gap-2 text-sm text-muted">
+            <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-brand"></i>Seu cliente não precisa baixar aplicativo nem criar conta</li>
+            <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-brand"></i>Página com as cores e os serviços do seu negócio</li>
+            <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-brand"></i>Funciona no celular, que é onde sua cliente está</li>
+          </ul>
+        </div>
+
+        <!-- Celular com a demonstração ao vivo -->
+        <div class="relative mx-auto">
+          <div class="w-[300px] h-[600px] rounded-[2.75rem] border-[10px] border-ink bg-ink shadow-2xl overflow-hidden">
+            <iframe src="agendar/?demo=salao" title="Demonstração da página de agendamento" class="w-[390px] h-[780px] origin-top-left scale-[.718] bg-white" loading="lazy"></iframe>
+          </div>
+          <div class="hidden sm:block absolute -left-16 bottom-20 card p-4 shadow-xl w-56">
+            <p class="text-xs text-muted">Novo agendamento pelo site</p>
+            <p class="font-semibold mt-1">Corte + escova</p>
+            <p class="text-sm text-muted">Amanhã, 10:00 · Ana</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== DEMONSTRAÇÕES POR NICHO ===== -->
+    <section id="demos" class="section scroll-mt-16">
+      <div class="text-center">
+        <span class="eyebrow">Demonstrações</span>
+        <h2 class="h2 mt-4">Veja como fica no seu tipo de negócio</h2>
+        <p class="lead mx-auto">Toque em um modelo e teste o agendamento como se fosse seu cliente. Nada é gravado.</p>
+      </div>
+      <div class="mt-10 grid grid-cols-2 md:grid-cols-4 gap-3" data-slot="nichos"></div>
+    </section>
+
+    <!-- ===== ANTES x DEPOIS ===== -->
+    <section class="bg-surface border-y border-line">
+      <div class="section">
+        <div class="text-center">
+          <span class="eyebrow">Por que mudar</span>
+          <h2 class="h2 mt-4">A diferença no seu dia a dia</h2>
+        </div>
+        <div class="mt-10 grid md:grid-cols-2 gap-4">
+          <div class="card p-6 bg-page">
+            <p class="font-semibold text-lg">Agenda de papel e WhatsApp</p>
+            <ul class="mt-4 grid gap-3 text-sm text-muted">
+              <li class="flex gap-2"><span class="text-red-500">✕</span>Horas por dia respondendo "tem horário amanhã?"</li>
+              <li class="flex gap-2"><span class="text-red-500">✕</span>Cliente desiste quando chama à noite e ninguém responde</li>
+              <li class="flex gap-2"><span class="text-red-500">✕</span>Dois clientes marcados no mesmo horário</li>
+              <li class="flex gap-2"><span class="text-red-500">✕</span>Esquecimentos e faltas sem aviso</li>
+              <li class="flex gap-2"><span class="text-red-500">✕</span>Sem saber quanto vai entrar no dia</li>
+            </ul>
+          </div>
+          <div class="card p-6 ring-2 ring-brand">
+            <p class="font-semibold text-lg flex items-center gap-2">Com a <span data-slot="produto"></span></p>
+            <ul class="mt-4 grid gap-3 text-sm">
+              <li class="flex gap-2"><span class="text-brand">✓</span>O cliente agenda sozinho, 24 horas, pelo link da bio</li>
+              <li class="flex gap-2"><span class="text-brand">✓</span>Só aparecem horários realmente livres de cada profissional</li>
+              <li class="flex gap-2"><span class="text-brand">✓</span>O sistema bloqueia dois agendamentos no mesmo horário</li>
+              <li class="flex gap-2"><span class="text-brand">✓</span>Lembrete pronto no WhatsApp com 1 clique</li>
+              <li class="flex gap-2"><span class="text-brand">✓</span>Agenda do dia com valor previsto e concluído</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== RECURSOS ===== -->
+    <section id="recursos" class="section scroll-mt-16">
+      <div class="text-center">
+        <span class="eyebrow">Recursos</span>
+        <h2 class="h2 mt-4">Tudo o que um pequeno negócio precisa</h2>
+      </div>
+      <div class="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-4" data-slot="recursos"></div>
+    </section>
+
+    <!-- ===== COMO FUNCIONA ===== -->
+    <section class="bg-surface border-y border-line">
+      <div class="section">
+        <div class="text-center">
+          <span class="eyebrow">Como começar</span>
+          <h2 class="h2 mt-4">No ar no mesmo dia</h2>
+        </div>
+        <ol class="mt-10 grid md:grid-cols-3 gap-4">
+          <li class="card p-6 bg-page"><span class="w-9 h-9 rounded-full bg-brand text-brand-contrast font-semibold flex items-center justify-center">1</span><p class="mt-4 font-semibold">A gente cadastra tudo</p><p class="mt-1 text-sm text-muted">Serviços, preços, equipe e horários do seu negócio, com as suas cores.</p></li>
+          <li class="card p-6 bg-page"><span class="w-9 h-9 rounded-full bg-brand text-brand-contrast font-semibold flex items-center justify-center">2</span><p class="mt-4 font-semibold">Você divulga o link</p><p class="mt-1 text-sm text-muted">Na bio do Instagram, na resposta automática do WhatsApp e num QR Code no balcão.</p></li>
+          <li class="card p-6 bg-page"><span class="w-9 h-9 rounded-full bg-brand text-brand-contrast font-semibold flex items-center justify-center">3</span><p class="mt-4 font-semibold">Os horários chegam sozinhos</p><p class="mt-1 text-sm text-muted">Abra o painel pelo celular e veja quem vem hoje, com o valor de cada atendimento.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ===== PLANOS ===== -->
+    <section id="planos" class="section scroll-mt-16">
+      <div class="text-center">
+        <span class="eyebrow">Planos</span>
+        <h2 class="h2 mt-4">Simples, sem fidelidade</h2>
+      </div>
+      <div class="mt-10 grid md:grid-cols-3 gap-4 items-stretch" data-slot="planos"></div>
+    </section>
+
+    <!-- ===== DÚVIDAS ===== -->
+    <section id="faq" class="bg-surface border-y border-line scroll-mt-16">
+      <div class="section" style="max-width:48rem">
+        <div class="text-center"><span class="eyebrow">Dúvidas</span><h2 class="h2 mt-4">Perguntas frequentes</h2></div>
+        <div class="mt-10 grid gap-3" data-slot="faq"></div>
+      </div>
+    </section>
+
+    <!-- ===== CTA ===== -->
+    <section class="section">
+      <div class="relative overflow-hidden rounded-3xl bg-brand text-brand-contrast px-6 py-14 md:px-14 text-center">
+        <div class="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-white/10"></div>
+        <h2 class="relative font-display text-3xl md:text-5xl font-bold">Vamos colocar sua agenda online?</h2>
+        <p class="relative mt-4 opacity-90 max-w-xl mx-auto">Chame no WhatsApp e mostramos como fica com os serviços do seu negócio.</p>
+        <a data-wa-vendas="Olá! Quero colocar a agenda online no meu negócio." class="relative mt-8 btn bg-brand-contrast text-brand !px-7 !py-3.5 !text-base"><i data-lucide="message-circle" class="w-5 h-5"></i>Quero começar</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-line">
+    <div class="max-w-6xl mx-auto px-4 py-10 flex flex-col md:flex-row gap-4 justify-between text-sm text-muted">
+      <p>© <span data-slot="ano"></span> <span data-slot="produto"></span> · <span data-slot="cidade"></span></p>
+      <div class="flex gap-5">
+        <a href="painel/" class="hover:text-brand">Área do cliente</a>
+        <a data-slot-href="email" class="hover:text-brand" data-slot="email"></a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="assets/config.js"></script>
+  <script src="assets/nichos.js"></script>
+  <script src="assets/comum.js"></script>
+  <script>
+    (() => {
+      const { $$, esc, waLink, icons } = U;
+      const P = CONFIG.produto;
+      U.aplicarTema(TEMA_PRODUTO);
+      document.title = `${P.nome} · ${P.slogan}`;
+      const slot = (n, html) => $$(`[data-slot="${n}"]`).forEach((el) => { el.innerHTML = html; });
+      slot('produto', esc(P.nome)); slot('ano', new Date().getFullYear()); slot('cidade', esc(P.cidade)); slot('email', esc(P.email));
+      $$('[data-slot-href="email"]').forEach((a) => { a.href = `mailto:${P.email}`; });
+      $$('[data-wa-vendas]').forEach((a) => { a.href = waLink(P.whatsapp, a.dataset.waVendas); a.target = '_blank'; a.rel = 'noopener'; });
+
+      slot('nichos', Object.entries(NICHOS).map(([id, n]) => {
+        const cor = `rgb(${n.tema.brand.replaceAll(' ', ',')})`;
+        return `<a href="agendar/?demo=${id}" class="card p-5 group hover:shadow-lg transition">
+          <span class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl" style="background:${cor}1a;background:color-mix(in srgb, ${cor} 12%, transparent)">${n.emoji}</span>
+          <p class="mt-4 font-semibold">${esc(n.rotulo)}</p>
+          <p class="mt-1 text-sm flex items-center gap-1" style="color:${cor}">Ver demonstração <span class="transition group-hover:translate-x-1">→</span></p>
+        </a>`;
+      }).join(''));
+
+      const recursos = [
+        ['link', 'Link para a bio', 'Uma página só do seu negócio, com seus serviços, preços, fotos e botão de WhatsApp.'],
+        ['shield-check', 'Zero conflito de horário', 'Cada profissional tem sua agenda. O sistema impede dois clientes no mesmo horário, mesmo no mesmo segundo.'],
+        ['layers', 'Vários serviços de uma vez', 'Cliente marca corte e escova juntos: o tempo é somado e reservado em sequência.'],
+        ['bell-ring', 'Lembrete no WhatsApp', 'Mensagem pronta com nome, serviço, data e valor. Um clique e está enviada.'],
+        ['calendar-off', 'Folgas e feriados', 'Bloqueie dias ou horas de um profissional ou do negócio inteiro.'],
+        ['image', 'Portfólio de trabalhos', 'Envie fotos pelo celular. Elas aparecem na sua página com filtro por categoria.'],
+        ['qr-code', 'QR Code para o balcão', 'Imprima e deixe no espelho: o cliente já marca o próximo horário antes de sair.'],
+        ['message-square-text', 'Resposta automática pronta', 'Texto para a saudação do WhatsApp Business: quem chama recebe o link na hora.'],
+        ['smartphone', 'Painel no celular', 'Agenda do dia, valor previsto, cadastro de serviços e equipe, tudo pelo telefone.']
+      ];
+      slot('recursos', recursos.map(([ic, t, d]) => `<div class="card p-6"><div class="w-11 h-11 rounded-xl bg-brand/10 text-brand flex items-center justify-center"><i data-lucide="${ic}" class="w-5 h-5"></i></div><h3 class="mt-4 font-semibold text-lg">${t}</h3><p class="mt-2 text-sm text-muted">${d}</p></div>`).join(''));
+
+      slot('planos', P.planos.map((p) => `
+        <div class="card p-6 flex flex-col ${p.destaque ? 'ring-2 ring-brand relative' : ''}">
+          ${p.destaque ? '<span class="absolute -top-3 left-6 eyebrow !bg-brand !text-brand-contrast">Mais escolhido</span>' : ''}
+          <p class="font-semibold text-lg">${esc(p.nome)}</p>
+          <p class="mt-3"><span class="font-display text-3xl font-bold">${p.preco == null ? 'Sob consulta' : Number(p.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>${p.preco == null ? '' : ` <span class="text-sm text-muted">${esc(p.periodo)}</span>`}</p>
+          <ul class="mt-5 grid gap-2 text-sm flex-1">${p.itens.map((i) => `<li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-brand shrink-0 mt-0.5"></i>${esc(i)}</li>`).join('')}</ul>
+          <a href="${waLink(P.whatsapp, `Olá! Tenho interesse no plano ${p.nome}.`)}" target="_blank" rel="noopener" class="btn ${p.destaque ? 'btn-primary' : 'btn-ghost'} mt-6">Quero este</a>
+        </div>`).join(''));
+
+      const faq = [
+        ['Meu cliente precisa baixar aplicativo?', 'Não. Ele abre o link pelo navegador do celular, escolhe e confirma com nome e WhatsApp.'],
+        ['E se duas pessoas tentarem o mesmo horário?', 'Só a primeira consegue. O próprio banco de dados bloqueia o segundo agendamento, e a pessoa vê outros horários livres.'],
+        ['Consigo usar com mais de um profissional?', 'Sim. Cada um tem a própria agenda e o cliente pode escolher com quem quer ser atendido ou deixar "sem preferência".'],
+        ['O cliente recebe o link quando me chama no WhatsApp?', 'Sim, usando a mensagem de saudação do WhatsApp Business. Deixamos o texto pronto no painel, é só colar.'],
+        ['Posso marcar horários que chegam por telefone ou no balcão?', 'Pode. No painel tem o botão "Novo agendamento", e ele também respeita a regra de não conflitar.'],
+        ['Tem fidelidade?', 'Não. Você pode cancelar quando quiser.']
+      ];
+      slot('faq', faq.map(([p, r]) => `<details class="card px-5"><summary class="py-4 flex items-center justify-between gap-4 cursor-pointer font-medium">${p}<i data-lucide="plus" class="faq-icon w-5 h-5 shrink-0 text-brand transition"></i></summary><p class="pb-5 -mt-1 text-sm text-muted">${r}</p></details>`).join(''));
+      icons();
+    })();
+  </script>
+</body>
+</html>
