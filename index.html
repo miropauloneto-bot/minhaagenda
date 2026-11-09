@@ -204,6 +204,9 @@
         ['bell-ring', 'Lembrete no WhatsApp', 'Mensagem pronta com nome, serviço, data e valor. Um clique e está enviada.'],
         ['calendar-off', 'Folgas e feriados', 'Bloqueie dias ou horas de um profissional ou do negócio inteiro.'],
         ['image', 'Portfólio de trabalhos', 'Envie fotos pelo celular. Elas aparecem na sua página com filtro por categoria.'],
+        ['percent', 'Comissão automática', 'Defina a % por serviço e por profissional. O sistema calcula sozinho, até com desconto.'],
+        ['wallet', 'Financeiro da semana e do mês', 'Faturado, comissões, líquido, formas de pagamento e fechamento de cada profissional.'],
+        ['key-round', 'Login para cada profissional', 'Cada um vê só a própria agenda e os próprios ganhos, sem mexer em preços e cadastros.'],
         ['qr-code', 'QR Code para o balcão', 'Imprima e deixe no espelho: o cliente já marca o próximo horário antes de sair.'],
         ['message-square-text', 'Resposta automática pronta', 'Texto para a saudação do WhatsApp Business: quem chama recebe o link na hora.'],
         ['smartphone', 'Painel no celular', 'Agenda do dia, valor previsto, cadastro de serviços e equipe, tudo pelo telefone.']
@@ -225,6 +228,8 @@
         ['Consigo usar com mais de um profissional?', 'Sim. Cada um tem a própria agenda e o cliente pode escolher com quem quer ser atendido ou deixar "sem preferência".'],
         ['O cliente recebe o link quando me chama no WhatsApp?', 'Sim, usando a mensagem de saudação do WhatsApp Business. Deixamos o texto pronto no painel, é só colar.'],
         ['Posso marcar horários que chegam por telefone ou no balcão?', 'Pode. No painel tem o botão "Novo agendamento", e ele também respeita a regra de não conflitar.'],
+        ['Cada profissional tem seu login?', 'No plano Equipe, sim. Cada um vê só a própria agenda e quanto ganhou de comissão. Preços, equipe e dados do negócio ficam só com o dono.'],
+        ['O sistema calcula a comissão?', 'Sim. Você define a porcentagem por serviço (ex.: corte 40%) e pode ter exceções por profissional. No fechamento da semana ou do mês, o valor de cada um já está pronto.'],
         ['Tem fidelidade?', 'Não. Você pode cancelar quando quiser.']
       ];
       slot('faq', faq.map(([p, r]) => `<details class="card px-5"><summary class="py-4 flex items-center justify-between gap-4 cursor-pointer font-medium">${p}<i data-lucide="plus" class="faq-icon w-5 h-5 shrink-0 text-brand transition"></i></summary><p class="pb-5 -mt-1 text-sm text-muted">${r}</p></details>`).join(''));

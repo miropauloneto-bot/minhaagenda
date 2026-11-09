@@ -9,6 +9,8 @@ Sistema completo para salões, barbearias, esmalterias, clínicas de estética, 
 | Página do negócio | `/agendar/?n=nome-do-negocio` | O cliente final agendar |
 | Painel do dono | `/painel/` | O dono gerenciar agenda, serviços, equipe etc. |
 
+> **Já instalou a versão anterior?** Veja [Atualizar para a versão 2](#atualizar-para-a-versão-2) no fim deste guia.
+
 **Custo: R$ 0.** O site fica no **GitHub Pages** e o banco de dados no **Supabase**, ambos no plano gratuito.
 
 ---
@@ -121,17 +123,62 @@ No Supabase, **Table Editor** mostra todas as tabelas de todos os clientes:
 | Quero… | Onde |
 |---|---|
 | Ver todos os negócios | tabela `negocios` |
-| **Suspender** um cliente que não pagou | `negocios` → coluna `ativo` = `false` (a página sai do ar e não aceita agendamentos) |
-| Reativar | `ativo` = `true` |
+| **Suspender** um cliente que não pagou | `negocios` → coluna `suspenso` = `true` (a página sai do ar; o dono entra no painel e vê o aviso para falar com você) |
+| Reativar | `suspenso` = `false` |
+| **Mudar o plano** de um cliente | `negocios` → coluna `plano` = `essencial`, `equipe` ou `ilimitado` |
 | Ver quantos agendamentos cada um teve | tabela `agendamentos`, filtre por `negocio_id` |
 | Trocar a senha de um dono | **Authentication → Users** → ⋯ → *Send password recovery* (ou apague o usuário e crie de novo) |
 | Fazer backup | Table Editor → cada tabela → *Export → CSV* (faça uma vez por mês) |
+
+> O dono **não consegue** mudar o próprio plano nem tirar a suspensão: o banco bloqueia. Só você, pelo Table Editor.
+> (A coluna `ativo` é outra coisa: é o botão "Página no ar" que o próprio dono usa para pausar a agenda, por exemplo nas férias.)
 
 ### Atualizar o sistema
 
 Altere os arquivos no VS Code → `git add .` → `git commit -m "o que mudou"` → `git push`. O GitHub Pages publica sozinho em 1 a 2 minutos, para todos os clientes ao mesmo tempo.
 
 ---
+
+## Planos: o que cada um libera
+
+| | Essencial | Equipe | Ilimitado |
+|---|---|---|---|
+| Profissionais ativos | 1 | até 6 | sem limite |
+| Página de agendamento, agenda, lembrete, financeiro | ✅ | ✅ | ✅ |
+| Login individual para cada profissional | — | ✅ | ✅ |
+| Aba Comissões | — | ✅ | ✅ |
+
+- Toda conta nova começa no **Equipe** (bom para teste grátis). Depois você ajusta pelo Table Editor.
+- **Implantação** não é um plano do sistema: é o seu serviço de cadastrar tudo para o cliente, cobrado uma vez.
+- O plano **Ilimitado** não aparece na página de vendas. Use para salões grandes, com preço combinado.
+- Textos e preços dos planos na página de vendas: `assets/config.js`.
+
+## Equipe, comissões e financeiro
+
+### Login de cada profissional (plano Equipe)
+1. O dono vai em **Equipe** e clica em **Dar acesso ao painel** no profissional.
+2. O sistema gera um **código de convite** (vale 7 dias e só pode ser usado uma vez) e um link. O dono envia pelo WhatsApp.
+3. O profissional abre o link, cria a conta com **o próprio e-mail** e já entra.
+4. O profissional **vê e faz:** a própria agenda; concluir atendimento (valor e forma de pagamento); marcar falta; lançar agendamento para si mesmo; ver **Meus ganhos** (comissão por semana e mês).
+5. O profissional **não vê nem faz:** agenda dos colegas, preços, equipe, comissões dos outros, dados do negócio, cancelar agendamentos.
+6. Se a pessoa sair da equipe: **Equipe → remover acesso**. O login para de funcionar na hora e o histórico continua.
+
+### Comissões
+Na aba **Comissões** há uma tabela de serviços × profissionais, em %. O sistema usa a regra mais específica:
+1. **Serviço + profissional** (exceção: "Diego ganha 50% no corte")
+2. **Padrão do serviço** ("corte paga 40% para todos")
+3. **Padrão do profissional** ("Rafael ganha 30% em tudo que não tem regra")
+
+A comissão é **gravada em cada atendimento**. Mudar a regra hoje não muda o que já foi feito. Se o atendimento for concluído com desconto (ex.: tabela R$ 45, cobrou R$ 40), a comissão é calculada sobre o valor cobrado.
+
+### Financeiro
+- **Concluir e receber** na agenda registra o valor cobrado e a forma de pagamento (Pix, dinheiro, crédito, débito).
+- A aba **Financeiro** mostra hoje, esta semana, semana passada, este mês, mês passado ou datas à escolha:
+  - faturado, comissões, líquido, ticket médio, faltas e cancelados;
+  - tabela por profissional;
+  - formas de pagamento, serviços mais feitos e faturamento por dia.
+- O botão **Fechamento** envia o resumo do período para o profissional pelo WhatsApp.
+- **Baixar planilha** gera um CSV que abre no Excel.
 
 ## Roteiro para as visitas
 
@@ -175,9 +222,10 @@ Cada dono também pode mudar pelo próprio painel (**Meu negócio**): nome, cor 
 
 ## O que ainda não faz (próximos passos sugeridos)
 
-- **Envio automático de lembretes no WhatsApp:** hoje o lembrete é enviado com 1 clique pelo dono. Automático exige a API oficial do WhatsApp (Meta), que tem custo por conversa.
+- **Envio automático de lembretes no WhatsApp:** hoje o lembrete é enviado com 1 clique (dono ou profissional). Automático exige a API oficial do WhatsApp (Meta), com custo por mensagem.
 - **Serviço por profissional:** hoje qualquer profissional pode fazer qualquer serviço. Útil para salões com especialistas (ex.: só a colorista faz coloração).
-- **Login para cada profissional** ver só a própria agenda.
+- **Controle de comissão paga:** hoje o relatório mostra quanto pagar; marcar "pago em tal dia" ainda é manual.
+- **Painel do fornecedor:** lista de clientes, vencimentos e suspensão sem abrir o Supabase.
 - **Domínio próprio** (ex.: `agenda.seunegocio.com.br`): o GitHub Pages aceita, em *Settings → Pages → Custom domain*.
 - **Aviso de privacidade (LGPD):** o sistema guarda nome e WhatsApp dos clientes finais. Antes de vender em escala, publique uma política de privacidade simples.
 - **Tailwind via CDN:** ótimo para começar e editar fácil; o navegador mostra um aviso no console dizendo que não é para produção. Funciona normalmente, e mais tarde dá para trocar por um CSS compilado.
@@ -205,3 +253,19 @@ minhaagenda/
 ### Como o "nunca dois clientes no mesmo horário" funciona
 
 A regra está **no banco de dados** (`sem_conflito_de_horario` em `schema.sql`), não só na tela. Mesmo se duas pessoas confirmarem no mesmo segundo, o Postgres aceita só uma. A outra recebe "Esse horário acabou de ser reservado" e escolhe outro. Com "sem preferência", o sistema tenta o próximo profissional livre automaticamente. A mesma regra vale para os agendamentos lançados pelo painel.
+
+---
+
+## Atualizar para a versão 2
+
+Para quem já instalou a primeira versão. **Nenhum dado é perdido.**
+
+1. **Banco:** Supabase → **SQL Editor** → *New query* → cole **todo** o `supabase/schema.sql` novo → **Run** → confirme o aviso de "destructive operation".
+   Deve aparecer *Success*. As tabelas `comissoes`, `acessos` e `convites` aparecem no Table Editor.
+2. **Site:** no GitHub, envie os arquivos alterados (**Add file → Upload files**, arrastando por cima dos antigos):
+   - `index.html`
+   - `README.md`
+   - `assets/config.js` ⚠️ **antes, copie para o novo a sua URL e a sua chave do Supabase**, senão o site perde a configuração
+   - `assets/painel.js`, `assets/base.css`, `assets/comum.js`, `assets/agendar.js`, `assets/nichos.js`
+   - `supabase/schema.sql`
+3. Espere a publicação terminar (1 a 3 minutos) e recarregue o painel com **Ctrl+F5**.
