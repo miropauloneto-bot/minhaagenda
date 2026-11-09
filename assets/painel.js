@@ -6,7 +6,8 @@
   'use strict';
   const { $, $$, esc, brl, fmtDur, isoDate, parseISO, dataLonga, icons, horaNoFuso, dataNoFuso, localParaISO, mascaraFone, soDigitos, waLink, msgErro, toast, slugify } = U;
   const sb = U.sb();
-  const S = { user: null, neg: null, profs: [], servicos: [], aba: 'agenda', dia: isoDate(new Date()), filtroProf: '' };
+  const S = { user: null, neg: null, papel: 'dono', meuProf: null, profs: [], servicos: [], aba: 'agenda', dia: isoDate(new Date()), filtroProf: '' };
+  let conviteURL = new URLSearchParams(location.search).get('convite');   // link de convite de profissional
   const fuso = () => S.neg?.fuso || 'America/Sao_Paulo';
   const linkPublico = () => new URL(`../agendar/?n=${S.neg.slug}`, location.href).href;
   const mostrar = (id) => ['v-carregando', 'v-auth', 'v-app'].forEach((v) => $(`#${v}`).classList.toggle('hidden', v !== id));
@@ -73,6 +74,7 @@
         <form id="f-auth" class="card p-6 mt-6 grid gap-4" novalidate>
           <h1 class="font-semibold text-lg">${titulos[modo]}</h1>
           ${aviso ? `<p class="text-sm rounded-xl bg-brand/10 text-brand p-3">${esc(aviso)}</p>` : ''}
+          ${conviteURL && (modo === 'entrar' || modo === 'criar') ? `<p class="text-sm rounded-xl bg-green-500/10 text-green-700 p-3">Você recebeu um convite para a equipe (código <b>${esc(conviteURL)}</b>). ${modo === 'criar' ? 'Crie sua conta com seu e-mail' : 'Entre ou crie sua conta'} e o acesso é liberado na hora.</p>` : ''}
           ${modo !== 'nova' ? '<label class="label">E-mail<input name="email" type="email" class="input" autocomplete="email" required></label>' : ''}
           ${modo !== 'recuperar' ? `<label class="label">${modo === 'nova' ? 'Nova senha' : 'Senha'}<input name="senha" type="password" class="input" minlength="6" autocomplete="${modo === 'entrar' ? 'current-password' : 'new-password'}" required>${modo !== 'entrar' ? '<small>Mínimo de 6 caracteres.</small>' : ''}</label>` : ''}
           <p class="text-sm text-red-600 hidden" data-slot="auth-erro"></p>
@@ -142,6 +144,7 @@
         <p class="text-sm text-red-600 hidden" data-slot="neg-erro"></p>
         <div class="flex flex-wrap justify-between gap-2">
           <button type="button" data-acao="sair" class="btn btn-ghost">Sair</button>
+          <button type="button" data-acao="tenho-convite" class="btn btn-ghost"><i data-lucide="ticket" class="w-4 h-4"></i>Sou profissional e tenho um código</button>
           <button class="btn btn-primary">Criar minha página<i data-lucide="arrow-right" class="w-4 h-4"></i></button>
         </div>
       </form>`;
@@ -184,17 +187,32 @@
   }
 
   /* =================================================================
-     4. CARREGAMENTO
+     4. CARREGAMENTO (dono ou profissional da equipe)
      ================================================================= */
   async function carregarUsuario() {
     const { data: { session } } = await sb.auth.getSession();
     S.user = session?.user || null;
-    if (!S.user) return telaAuth('entrar');
+    if (!S.user) return telaAuth(conviteURL ? 'criar' : 'entrar');
+    if (conviteURL) {
+      const cod = conviteURL; conviteURL = null;
+      history.replaceState(null, '', location.pathname);
+      const { error } = await sb.rpc('aceitar_convite', { p_codigo: cod });
+      if (error) toast(msgErro(error), 'erro'); else toast('Acesso liberado! Bem-vindo(a) à equipe.');
+    }
     await carregarNegocio();
   }
   async function carregarNegocio() {
-    const { data, error } = await sb.from('negocios').select('*').eq('owner_id', S.user.id).maybeSingle();
+    let { data, error } = await sb.from('negocios').select('*').eq('owner_id', S.user.id).maybeSingle();
     if (error) { toast(msgErro(error), 'erro'); return telaAuth('entrar'); }
+    S.papel = 'dono'; S.meuProf = null;
+    if (!data) {
+      const ac = await sb.from('acessos').select('negocio_id, profissional_id').eq('user_id', S.user.id).maybeSingle();
+      if (ac.data) {
+        const r = await sb.from('negocios').select('*').eq('id', ac.data.negocio_id).single();
+        data = r.data;
+        S.papel = 'prof'; S.meuProf = ac.data.profissional_id; S.filtroProf = '';
+      }
+    }
     if (!data) return telaNovoNegocio();
     S.neg = data;
     await recarregarBase();
@@ -209,36 +227,47 @@
   }
 
   /* =================================================================
-     5. ESTRUTURA DO PAINEL E ABAS
+     5. ESTRUTURA DO PAINEL E ABAS (cada papel vê abas diferentes)
      ================================================================= */
-  const ABAS = [
-    ['agenda', 'Agenda', 'calendar-days'], ['servicos', 'Serviços', 'scissors'], ['equipe', 'Equipe', 'users'],
-    ['horarios', 'Horários', 'clock'], ['folgas', 'Folgas', 'calendar-off'], ['portfolio', 'Portfólio', 'image'],
-    ['depoimentos', 'Depoimentos', 'message-square-quote'], ['negocio', 'Meu negócio', 'store'], ['divulgar', 'Divulgar', 'share-2']
-  ];
+  const PLANOS = { essencial: 'Essencial', equipe: 'Equipe', ilimitado: 'Ilimitado' };
+  const temEquipe = () => S.neg.plano !== 'essencial';
+  function abasVisiveis() {
+    if (S.papel === 'prof') return [['agenda', 'Minha agenda', 'calendar-days'], ['financeiro', 'Meus ganhos', 'wallet'], ['divulgar', 'Divulgar', 'share-2']];
+    return [
+      ['agenda', 'Agenda', 'calendar-days'], ['financeiro', 'Financeiro', 'wallet'], ['servicos', 'Serviços', 'scissors'], ['equipe', 'Equipe', 'users'],
+      ...(temEquipe() ? [['comissoes', 'Comissões', 'percent']] : []),
+      ['horarios', 'Horários', 'clock'], ['folgas', 'Folgas', 'calendar-off'], ['portfolio', 'Portfólio', 'image'],
+      ['depoimentos', 'Depoimentos', 'message-square-quote'], ['negocio', 'Meu negócio', 'store'], ['divulgar', 'Divulgar', 'share-2']
+    ];
+  }
   function montarApp() {
     mostrar('v-app');
     $('[data-slot="emoji"]').textContent = (NICHOS[S.neg.nicho] || NICHOS.salao).emoji;
-    $('[data-slot="nome-negocio"]').textContent = S.neg.nome;
+    const eu = S.profs.find((p) => p.id === S.meuProf);
+    $('[data-slot="nome-negocio"]').textContent = S.papel === 'prof' ? `${S.neg.nome} · ${eu?.nome || ''}` : S.neg.nome;
     $('[data-slot="link-publico"]').href = linkPublico();
+    if (!abasVisiveis().some(([k]) => k === S.aba)) S.aba = 'agenda';
     abrirAba(S.aba);
   }
   function abrirAba(id) {
     S.aba = id;
-    $('[data-slot="abas"]').innerHTML = ABAS.map(([k, r, ic]) => `
+    $('[data-slot="abas"]').innerHTML = abasVisiveis().map(([k, r, ic]) => `
       <button data-aba="${k}" class="shrink-0 flex items-center gap-1.5 px-3 py-2.5 text-sm border-b-2 ${k === id ? 'border-brand text-brand font-semibold' : 'border-transparent text-muted hover:text-ink'}"><i data-lucide="${ic}" class="w-4 h-4"></i>${r}</button>`).join('');
-    $(`[data-aba="${id}"]`)?.scrollIntoView({ block: 'nearest', inline: 'center' });
+    const ab = $(`[data-aba="${id}"]`);
+    if (ab) ab.parentElement.scrollLeft = ab.offsetLeft - ab.parentElement.clientWidth / 2 + ab.clientWidth / 2;
     $('#conteudo').innerHTML = '<div class="skeleton h-40"></div>';
     icons();
-    ({ agenda: abaAgenda, servicos: () => abaCrud(CRUD.servicos), equipe: () => abaCrud(CRUD.equipe), horarios: abaHorarios, folgas: abaFolgas, portfolio: abaPortfolio, depoimentos: () => abaCrud(CRUD.depoimentos), negocio: abaNegocio, divulgar: abaDivulgar })[id]();
+    ({ agenda: abaAgenda, financeiro: abaFinanceiro, servicos: () => abaCrud(CRUD.servicos), equipe: () => abaCrud(CRUD.equipe), comissoes: abaComissoes, horarios: abaHorarios, folgas: abaFolgas, portfolio: abaPortfolio, depoimentos: () => abaCrud(CRUD.depoimentos), negocio: abaNegocio, divulgar: abaDivulgar })[id]();
   }
   document.addEventListener('click', (e) => { const b = e.target.closest('[data-aba]'); if (b) abrirAba(b.dataset.aba); });
-  const cabecalho = (titulo, texto, botoes = '') => `
+  const avisoSuspenso = () => (S.neg?.suspenso ? `<div class="card p-4 mb-4 border-red-500/40 bg-red-500/5 text-sm flex flex-wrap items-center justify-between gap-3"><p><b class="text-red-600">Página suspensa.</b> Os clientes não conseguem agendar no momento. Fale com o suporte para reativar.</p><a href="${waLink(CONFIG.produto.whatsapp, `Olá! Minha página (${S.neg.nome}) está suspensa e quero reativar.`)}" target="_blank" rel="noopener" class="btn btn-wa btn-sm">Falar com o suporte</a></div>` : '');
+  const cabecalho = (titulo, texto, botoes = '') => avisoSuspenso() + `
     <div class="flex flex-wrap items-end justify-between gap-3 mb-6">
       <div><h1 class="font-display text-2xl md:text-3xl font-bold">${titulo}</h1>${texto ? `<p class="text-muted text-sm mt-1 max-w-xl">${texto}</p>` : ''}</div>
       <div class="flex flex-wrap gap-2">${botoes}</div>
     </div>`;
   const vazio = (texto) => `<div class="card p-8 text-center text-muted">${texto}</div>`;
+  const reais = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
   /* =================================================================
      6. AGENDA
@@ -249,7 +278,8 @@
     faltou: ['Faltou', 'bg-amber-500/15 text-amber-700'],
     cancelado: ['Cancelado', 'bg-red-500/10 text-red-600']
   };
-  let timerAgenda;
+  const FORMAS = { pix: 'Pix', dinheiro: 'Dinheiro', credito: 'Cartão de crédito', debito: 'Cartão de débito', outro: 'Outro', nao_informado: 'Não informado' };
+  let timerAgenda, agendaAtual = [];
   async function abaAgenda() {
     clearInterval(timerAgenda);
     const ini = localParaISO(S.dia, '00:00', fuso());
@@ -259,13 +289,16 @@
     const { data, error } = await q;
     if (S.aba !== 'agenda') return;
     if (error) { $('#conteudo').innerHTML = vazio(esc(msgErro(error))); return; }
-    const lista = data.filter((a) => dataNoFuso(a.inicio, fuso()) === S.dia);
+    const lista = agendaAtual = data.filter((a) => dataNoFuso(a.inicio, fuso()) === S.dia);
     const ativos = lista.filter((a) => a.status !== 'cancelado');
-    const previsto = ativos.filter((a) => a.status !== 'faltou').reduce((t, a) => t + Number(a.valor_total), 0);
-    const recebido = lista.filter((a) => a.status === 'concluido').reduce((t, a) => t + Number(a.valor_total), 0);
+    const previsto = ativos.filter((a) => a.status === 'confirmado').reduce((t, a) => t + Number(a.valor_total), 0);
+    const feitos = lista.filter((a) => a.status === 'concluido');
+    const recebido = feitos.reduce((t, a) => t + Number(a.valor_cobrado ?? a.valor_total), 0);
+    const comissao = feitos.reduce((t, a) => t + Number(a.comissao_valor), 0);
     const hoje = isoDate(new Date());
+    const prof = S.papel === 'prof';
 
-    $('#conteudo').innerHTML = cabecalho('Agenda', '', `<button data-acao="novo-agendamento" class="btn btn-primary"><i data-lucide="plus" class="w-4 h-4"></i>Novo agendamento</button>`) + `
+    $('#conteudo').innerHTML = cabecalho(prof ? 'Minha agenda' : 'Agenda', '', `<button data-acao="novo-agendamento" class="btn btn-primary"><i data-lucide="plus" class="w-4 h-4"></i>Novo agendamento</button>`) + `
       <div class="card p-3 flex flex-wrap items-center gap-2">
         <button data-acao="dia" data-d="-1" class="btn btn-ghost !p-2.5" aria-label="Dia anterior"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
         <input type="date" class="input !w-auto !py-2" value="${S.dia}" data-acao-change="dia-escolhido">
@@ -274,11 +307,12 @@
         <p class="font-semibold capitalize ml-1">${esc(dataLonga(S.dia))}</p>
         <button data-acao="atualizar" class="btn btn-ghost btn-sm ml-auto"><i data-lucide="refresh-cw" class="w-4 h-4"></i>Atualizar</button>
       </div>
-      ${S.profs.length > 1 ? `<div class="mt-3 flex gap-2 overflow-x-auto no-scrollbar">${[{ id: '', nome: 'Todos' }, ...S.profs].map((p) => `<button data-acao="filtro-prof" data-id="${p.id}" class="chip ${S.filtroProf === p.id ? 'chip-on' : ''}">${esc(p.nome)}</button>`).join('')}</div>` : ''}
-      <div class="mt-4 grid grid-cols-3 gap-3">
+      ${!prof && S.profs.length > 1 ? `<div class="mt-3 flex gap-2 overflow-x-auto no-scrollbar">${[{ id: '', nome: 'Todos' }, ...S.profs].map((p) => `<button data-acao="filtro-prof" data-id="${p.id}" class="chip ${S.filtroProf === p.id ? 'chip-on' : ''}">${esc(p.nome)}</button>`).join('')}</div>` : ''}
+      <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div class="card p-4"><p class="text-xs text-muted">Agendamentos</p><p class="text-2xl font-bold">${ativos.length}</p></div>
-        <div class="card p-4"><p class="text-xs text-muted">Previsto</p><p class="text-xl md:text-2xl font-bold">${brl(previsto).replace('Grátis', 'R$ 0,00')}</p></div>
-        <div class="card p-4"><p class="text-xs text-muted">Concluído</p><p class="text-xl md:text-2xl font-bold text-green-600">${brl(recebido).replace('Grátis', 'R$ 0,00')}</p></div>
+        <div class="card p-4"><p class="text-xs text-muted">A realizar</p><p class="text-xl font-bold">${reais(previsto)}</p></div>
+        <div class="card p-4"><p class="text-xs text-muted">Recebido</p><p class="text-xl font-bold text-green-600">${reais(recebido)}</p></div>
+        <div class="card p-4"><p class="text-xs text-muted">${prof ? 'Minha comissão' : 'Comissões'}</p><p class="text-xl font-bold">${reais(comissao)}</p></div>
       </div>
       <div class="mt-4 grid gap-3">
         ${lista.length ? lista.map(cardAgendamento).join('') : vazio('Nenhum agendamento neste dia.')}
@@ -292,6 +326,9 @@
     const servs = (a.servicos || []).map((s) => s.nome).join(' + ') || '—';
     const h1 = horaNoFuso(a.inicio, fuso()), h2 = horaNoFuso(a.fim, fuso());
     const msg = `Olá, ${a.cliente_nome.split(' ')[0]}! Passando para lembrar do seu horário no ${S.neg.nome}:\n\n• ${servs}\n• ${dataLonga(dataNoFuso(a.inicio, fuso()))}, às ${h1}\n• Profissional: ${a.profissional_nome}${Number(a.valor_total) ? `\n• Valor: ${brl(a.valor_total)}` : ''}\n\nSe precisar remarcar, é só responder esta mensagem. Até lá!`;
+    const dono = S.papel === 'dono';
+    const pago = a.status === 'concluido'
+      ? `<p class="text-sm mt-1"><span class="text-green-600 font-semibold">${reais(a.valor_cobrado ?? a.valor_total)}</span>${a.forma_pagamento ? ` · ${FORMAS[a.forma_pagamento]}` : ''} · comissão ${reais(a.comissao_valor)}</p>` : '';
     return `
       <article class="card p-4 ${a.status === 'cancelado' ? 'opacity-60' : ''}">
         <div class="flex flex-wrap items-start gap-3">
@@ -300,22 +337,48 @@
             <p class="font-semibold">${esc(a.cliente_nome)} <span class="ml-1 align-middle whitespace-nowrap text-[11px] font-semibold rounded-full px-2 py-0.5 ${cor}">${rot}</span>${a.origem === 'online' ? '<span class="ml-1 align-middle whitespace-nowrap text-[11px] rounded-full px-2 py-0.5 bg-brand/10 text-brand">pelo site</span>' : ''}</p>
             <p class="text-sm text-muted">${esc(servs)} · ${esc(a.profissional_nome || '—')} · ${brl(a.valor_total)}</p>
             <p class="text-sm"><a class="hover:text-brand" href="${waLink(a.cliente_whatsapp)}" target="_blank" rel="noopener">${esc(mascaraFone(a.cliente_whatsapp.replace(/^55(?=\d{10,11}$)/, '')))}</a></p>
+            ${pago}
             ${a.obs ? `<p class="text-sm mt-1 rounded-lg bg-page border border-line px-3 py-2">“${esc(a.obs)}”</p>` : ''}
           </div>
         </div>
         <div class="mt-3 flex flex-wrap gap-2">
           ${a.status === 'confirmado' ? `
             <a href="${waLink(a.cliente_whatsapp, msg)}" target="_blank" rel="noopener" class="btn btn-wa btn-sm"><i data-lucide="bell-ring" class="w-4 h-4"></i>Lembrete</a>
-            <button data-acao="status" data-id="${a.id}" data-s="concluido" class="btn btn-ghost btn-sm"><i data-lucide="check" class="w-4 h-4"></i>Concluído</button>
+            <button data-acao="concluir" data-id="${a.id}" class="btn btn-primary btn-sm"><i data-lucide="check" class="w-4 h-4"></i>Concluir e receber</button>
             <button data-acao="status" data-id="${a.id}" data-s="faltou" class="btn btn-ghost btn-sm">Faltou</button>
-            <button data-acao="status" data-id="${a.id}" data-s="cancelado" class="btn btn-danger btn-sm">Cancelar</button>`
-          : `<button data-acao="status" data-id="${a.id}" data-s="confirmado" class="btn btn-ghost btn-sm"><i data-lucide="rotate-ccw" class="w-4 h-4"></i>Voltar para confirmado</button>`}
+            ${dono ? `<button data-acao="status" data-id="${a.id}" data-s="cancelado" class="btn btn-danger btn-sm">Cancelar</button>` : ''}`
+          : `${a.status === 'concluido' ? `<button data-acao="concluir" data-id="${a.id}" class="btn btn-ghost btn-sm"><i data-lucide="pencil" class="w-4 h-4"></i>Corrigir pagamento</button>` : ''}
+             <button data-acao="status" data-id="${a.id}" data-s="confirmado" class="btn btn-ghost btn-sm"><i data-lucide="rotate-ccw" class="w-4 h-4"></i>Voltar para confirmado</button>`}
         </div>
       </article>`;
   }
 
+  /* Concluir: valor realmente cobrado (com desconto ou acréscimo) e forma de pagamento */
+  function concluir(id) {
+    const a = agendaAtual.find((x) => x.id === id);
+    modal({
+      titulo: 'Concluir atendimento',
+      ok: 'Concluir',
+      corpo: `
+        <p class="text-sm text-muted">${esc(a.cliente_nome)} · ${esc((a.servicos || []).map((s) => s.nome).join(' + '))}</p>
+        <label class="label">Valor cobrado (R$)<input name="valor" type="number" min="0" step="0.01" class="input" value="${Number(a.valor_cobrado ?? a.valor_total).toFixed(2)}"><small>Valor de tabela: ${reais(a.valor_total)}. Mude se deu desconto ou cobrou algo a mais. A comissão acompanha o valor.</small></label>
+        <fieldset class="grid gap-2"><legend class="text-sm font-medium mb-1">Forma de pagamento</legend>
+          <div class="grid grid-cols-2 gap-2">${['pix', 'dinheiro', 'credito', 'debito', 'outro'].map((f, i) => `
+            <label class="flex items-center gap-2 rounded-xl border border-line px-3 py-2.5 text-sm cursor-pointer has-[:checked]:border-brand has-[:checked]:bg-brand/5"><input type="radio" name="forma" value="${f}" ${(a.forma_pagamento || 'pix') === f ? 'checked' : ''}>${FORMAS[f]}</label>`).join('')}</div>
+        </fieldset>`,
+      async aoSalvar(f) {
+        const v = Number(f.valor.value);
+        if (f.valor.value === '' || v < 0) throw new Error('Informe o valor cobrado.');
+        const { error } = await sb.rpc('mudar_status', { p_id: id, p_status: 'concluido', p_valor: v, p_forma: f.forma.value });
+        if (error) throw error;
+        toast('Atendimento concluído.'); abaAgenda();
+      }
+    });
+  }
+
   function novoAgendamento() {
-    if (!S.profs.filter((p) => p.ativo).length || !S.servicos.filter((s) => s.ativo).length) return toast('Cadastre pelo menos um serviço e um profissional ativos.', 'erro');
+    const profs = S.papel === 'prof' ? S.profs.filter((p) => p.id === S.meuProf) : S.profs.filter((p) => p.ativo);
+    if (!profs.length || !S.servicos.filter((s) => s.ativo).length) return toast('Cadastre pelo menos um serviço e um profissional ativos.', 'erro');
     modal({
       titulo: 'Novo agendamento',
       corpo: `
@@ -325,7 +388,7 @@
           <label class="label">Data<input name="data" type="date" class="input" required value="${S.dia}"></label>
           <label class="label">Hora<input name="hora" type="time" class="input" required step="300"></label>
         </div>
-        <label class="label">Profissional<select name="prof" class="input">${S.profs.filter((p) => p.ativo).map((p) => `<option value="${p.id}">${esc(p.nome)}</option>`).join('')}</select></label>
+        <label class="label">Profissional<select name="prof" class="input" ${profs.length === 1 ? 'disabled' : ''}>${profs.map((p) => `<option value="${p.id}">${esc(p.nome)}</option>`).join('')}</select></label>
         <fieldset class="grid gap-2"><legend class="text-sm font-medium mb-1">Serviços</legend>
           ${S.servicos.filter((s) => s.ativo).map((s) => `<label class="flex items-center gap-3 rounded-xl border border-line px-3 py-2 text-sm"><input type="checkbox" name="serv" value="${s.id}" class="w-4 h-4"><span class="flex-1">${esc(s.nome)}</span><span class="text-muted">${fmtDur(s.duracao_min)} · ${brl(s.preco)}</span></label>`).join('')}
         </fieldset>
@@ -336,21 +399,195 @@
         if (soDigitos(f.fone.value).length < 10) throw new Error('Informe o WhatsApp com DDD.');
         if (!f.data.value || !f.hora.value) throw new Error('Informe data e hora.');
         if (!ids.length) throw new Error('Escolha pelo menos um serviço.');
-        const servs = S.servicos.filter((s) => ids.includes(s.id));
-        const dur = servs.reduce((t, s) => t + s.duracao_min, 0);
-        const inicio = localParaISO(f.data.value, f.hora.value, fuso());
-        const prof = S.profs.find((p) => p.id === f.prof.value);
-        const { error } = await sb.from('agendamentos').insert({
-          negocio_id: S.neg.id, profissional_id: prof.id, profissional_nome: prof.nome,
-          cliente_nome: f.nome.value.trim(), cliente_whatsapp: U.foneWa(f.fone.value),
-          servicos: servs.map((s) => ({ id: s.id, nome: s.nome, duracao_min: s.duracao_min, preco: s.preco })),
-          valor_total: servs.reduce((t, s) => t + s.preco, 0),
-          inicio, fim: new Date(new Date(inicio).getTime() + dur * 60000).toISOString(), origem: 'painel', obs: f.obs.value.trim()
+        const { error } = await sb.rpc('agendar_pelo_painel', {
+          p_profissional: f.prof.value, p_servicos: ids, p_inicio: localParaISO(f.data.value, f.hora.value, fuso()),
+          p_nome: f.nome.value.trim(), p_whatsapp: f.fone.value, p_obs: f.obs.value.trim()
         });
         if (error) throw error;
         S.dia = f.data.value; toast('Agendamento criado.'); abaAgenda();
       }
     });
+  }
+
+  /* =================================================================
+     6b. FINANCEIRO (semana, mês, por profissional)
+     ================================================================= */
+  function periodo(chave) {
+    const hoje = parseISO(isoDate(new Date()));
+    const d = (dt, n) => isoDate(new Date(dt.getTime() + n * 86400000 + 43200000));
+    const seg = (dt) => d(dt, -((dt.getDay() + 6) % 7));            // semana começa na segunda
+    const mesIni = (y, m) => isoDate(new Date(y, m, 1));
+    switch (chave) {
+      case 'hoje': return [isoDate(hoje), d(hoje, 1)];
+      case 'semana': return [seg(hoje), d(parseISO(seg(hoje)), 7)];
+      case 'semana_passada': return [d(parseISO(seg(hoje)), -7), seg(hoje)];
+      case 'mes': return [mesIni(hoje.getFullYear(), hoje.getMonth()), mesIni(hoje.getFullYear(), hoje.getMonth() + 1)];
+      case 'mes_passado': return [mesIni(hoje.getFullYear(), hoje.getMonth() - 1), mesIni(hoje.getFullYear(), hoje.getMonth())];
+      default: return [S.perIni, d(parseISO(S.perFim), 1)];
+    }
+  }
+  const fmtData = (iso) => parseISO(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  const barras = (itens, rotulo, valor, texto) => {
+    const max = Math.max(...itens.map(valor), 0) || 1;
+    return `<ul class="grid gap-3">${itens.map((x) => `
+      <li title="${esc(rotulo(x))}: ${esc(texto(x))}">
+        <div class="flex justify-between gap-3 text-sm"><span class="truncate">${esc(rotulo(x))}</span><span class="font-semibold shrink-0">${esc(texto(x))}</span></div>
+        <div class="mt-1 h-2 rounded-full bg-line/60"><div class="h-2 rounded-full bg-brand" style="width:${Math.max(2, (valor(x) / max) * 100)}%"></div></div>
+      </li>`).join('')}</ul>`;
+  };
+
+  async function abaFinanceiro() {
+    S.per = S.per || 'mes';
+    if (!S.perIni) { S.perIni = isoDate(new Date()); S.perFim = isoDate(new Date()); }
+    const [di, df] = periodo(S.per);
+    const { data: r, error } = await sb.rpc('relatorio', { p_ini: localParaISO(di, '00:00', fuso()), p_fim: localParaISO(df, '00:00', fuso()) });
+    if (S.aba !== 'financeiro') return;
+    if (error) { $('#conteudo').innerHTML = vazio(esc(msgErro(error))); return; }
+    S.relatorio = { r, di, df };
+    const prof = r.papel === 'profissional', R = r.resumo;
+    const liquido = R.faturado - R.comissoes, ticket = R.atendimentos ? R.faturado / R.atendimentos : 0;
+    const fimVis = isoDate(new Date(parseISO(df).getTime() - 43200000));
+    const PER = [['hoje', 'Hoje'], ['semana', 'Esta semana'], ['semana_passada', 'Semana passada'], ['mes', 'Este mês'], ['mes_passado', 'Mês passado'], ['outro', 'Escolher datas']];
+    const card = (t, v, extra = '') => `<div class="card p-4"><p class="text-xs text-muted">${t}</p><p class="text-xl md:text-2xl font-bold ${extra}">${v}</p></div>`;
+
+    $('#conteudo').innerHTML = cabecalho(prof ? 'Meus ganhos' : 'Financeiro',
+      prof ? 'Seus atendimentos concluídos e sua comissão no período.' : 'Considera só os atendimentos marcados como concluídos. A comissão é calculada pelas regras da aba Comissões.',
+      `<button data-acao="csv" class="btn btn-ghost"><i data-lucide="download" class="w-4 h-4"></i>Baixar planilha</button>`) + `
+      <div class="flex gap-2 overflow-x-auto no-scrollbar">${PER.map(([k, t]) => `<button data-acao="periodo" data-p="${k}" class="chip ${S.per === k ? 'chip-on' : ''}">${t}</button>`).join('')}</div>
+      ${S.per === 'outro' ? `<div class="mt-3 card p-3 flex flex-wrap items-end gap-3">
+          <label class="label">De<input type="date" class="input !py-2" value="${S.perIni}" data-acao-change="per-ini"></label>
+          <label class="label">Até<input type="date" class="input !py-2" value="${S.perFim}" data-acao-change="per-fim"></label></div>` : ''}
+      <p class="mt-3 text-sm text-muted">Período: <b class="text-ink">${fmtData(di)} a ${fmtData(fimVis)}</b></p>
+      <div class="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
+        ${card(prof ? 'Faturado por mim' : 'Faturado', reais(R.faturado), 'text-green-600')}
+        ${card(prof ? 'Minha comissão' : 'Comissões a pagar', reais(R.comissoes), prof ? 'text-brand' : '')}
+        ${prof ? card('Atendimentos', R.atendimentos) : card('Líquido do negócio', reais(liquido))}
+        ${card(prof ? 'Ticket médio' : 'Atendimentos', prof ? reais(ticket) : R.atendimentos)}
+        ${prof ? '' : card('Ticket médio', reais(ticket))}
+        ${card('A realizar no período', reais(R.previsto))}
+        ${card('Faltas', R.faltas, R.faltas ? 'text-amber-700' : '')}
+        ${prof ? '' : card('Cancelados', R.cancelados)}
+      </div>
+
+      ${prof ? '' : `
+      <div class="card mt-4 overflow-hidden">
+        <p class="font-semibold p-4 pb-2">Por profissional</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm min-w-[36rem]">
+            <thead class="text-left text-muted"><tr class="border-b border-line">
+              <th class="p-3 font-medium">Profissional</th><th class="p-3 font-medium text-right">Atend.</th><th class="p-3 font-medium text-right">Faturado</th>
+              <th class="p-3 font-medium text-right">Comissão</th><th class="p-3 font-medium text-right">Líquido</th><th class="p-3 font-medium text-right">Faltas</th><th class="p-3"></th></tr></thead>
+            <tbody>${r.por_profissional.length ? r.por_profissional.map((p, i) => `
+              <tr class="border-b border-line last:border-0">
+                <td class="p-3 font-medium">${esc(p.nome)}</td><td class="p-3 text-right">${p.atendimentos}</td>
+                <td class="p-3 text-right">${reais(p.faturado)}</td><td class="p-3 text-right font-semibold">${reais(p.comissao)}</td>
+                <td class="p-3 text-right">${reais(p.faturado - p.comissao)}</td><td class="p-3 text-right">${p.faltas}</td>
+                <td class="p-3 text-right"><button data-acao="fechamento" data-i="${i}" class="btn btn-wa btn-sm !py-1" title="Enviar fechamento pelo WhatsApp"><i data-lucide="send" class="w-3.5 h-3.5"></i>Fechamento</button></td>
+              </tr>`).join('') : '<tr><td colspan="7" class="p-6 text-center text-muted">Nenhum atendimento no período.</td></tr>'}
+            </tbody>
+            ${r.por_profissional.length > 1 ? `<tfoot class="font-semibold"><tr class="border-t border-line"><td class="p-3">Total</td><td class="p-3 text-right">${R.atendimentos}</td><td class="p-3 text-right">${reais(R.faturado)}</td><td class="p-3 text-right">${reais(R.comissoes)}</td><td class="p-3 text-right">${reais(liquido)}</td><td class="p-3 text-right">${R.faltas}</td><td></td></tr></tfoot>` : ''}
+          </table>
+        </div>
+      </div>`}
+
+      <div class="mt-4 grid lg:grid-cols-3 gap-4">
+        <div class="card p-4"><p class="font-semibold mb-3">Por forma de pagamento</p>${r.por_forma.length ? barras(r.por_forma, (x) => FORMAS[x.forma] || x.forma, (x) => Number(x.valor), (x) => `${reais(x.valor)} · ${x.qtd}x`) : '<p class="text-sm text-muted">Sem dados.</p>'}</div>
+        <div class="card p-4"><p class="font-semibold mb-3">Serviços mais feitos</p>${r.por_servico.length ? barras(r.por_servico, (x) => x.nome, (x) => Number(x.qtd), (x) => `${x.qtd}x · ${reais(x.valor)}`) : '<p class="text-sm text-muted">Sem dados.</p>'}</div>
+        <div class="card p-4"><p class="font-semibold mb-3">Faturamento por dia</p>${r.por_dia.length ? barras(r.por_dia, (x) => parseISO(x.dia).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' }), (x) => Number(x.valor), (x) => reais(x.valor)) : '<p class="text-sm text-muted">Sem dados.</p>'}</div>
+      </div>`;
+    icons();
+  }
+
+  function baixarCSV() {
+    const { r, di } = S.relatorio || {};
+    if (!r) return;
+    const n = (v) => Number(v || 0).toFixed(2).replace('.', ',');
+    const q = (s) => `"${String(s ?? '').replace(/"/g, '""')}"`;
+    const linhas = [['Data', 'Hora', 'Cliente', 'Profissional', 'Serviços', 'Valor de tabela', 'Valor cobrado', 'Forma de pagamento', 'Comissão'].map(q).join(';')];
+    r.itens.forEach((x) => linhas.push([new Date(x.inicio).toLocaleDateString('pt-BR', { timeZone: fuso() }), horaNoFuso(x.inicio, fuso()), x.cliente_nome, x.profissional_nome, x.servicos,
+      n(x.valor_total), n(x.valor_cobrado), FORMAS[x.forma_pagamento] || '', n(x.comissao_valor)].map((v, i) => (i >= 5 && i !== 7 ? v : q(v))).join(';')));
+    const blob = new Blob(['﻿' + linhas.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = `financeiro-${S.neg.slug}-${di}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  function enviarFechamento(i) {
+    const { r, di, df } = S.relatorio;
+    const p = r.por_profissional[i];
+    const fimVis = isoDate(new Date(parseISO(df).getTime() - 43200000));
+    const msg = `Fechamento ${S.neg.nome}\nPeríodo: ${fmtData(di)} a ${fmtData(fimVis)}\n\nProfissional: ${p.nome}\nAtendimentos: ${p.atendimentos}\nFaturado: ${reais(p.faturado)}\nComissão: ${reais(p.comissao)}${p.faltas ? `\nFaltas de clientes: ${p.faltas}` : ''}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
+  }
+
+  /* =================================================================
+     6c. COMISSÕES (tabela serviço x profissional)
+     ================================================================= */
+  async function abaComissoes() {
+    const { data, error } = await sb.from('comissoes').select('*').eq('negocio_id', S.neg.id);
+    if (S.aba !== 'comissoes') return;
+    if (error) { $('#conteudo').innerHTML = vazio(esc(msgErro(error))); return; }
+    const profs = S.profs.filter((p) => p.ativo), servs = S.servicos.filter((s) => s.ativo);
+    const regra = (sv, pf) => data.find((c) => (c.servico_id || null) === sv && (c.profissional_id || null) === pf)?.percentual;
+    const val = (v) => (v == null ? '' : Number(v));
+    const efetivo = (sv, pf) => regra(sv, pf) ?? regra(sv, null) ?? regra(null, pf) ?? 0;
+    const inp = (sv, pf, ph) => `<input type="number" min="0" max="100" step="0.5" inputmode="decimal" class="input !w-20 !px-2 !py-1.5 text-center" data-sv="${sv || ''}" data-pf="${pf || ''}" value="${val(regra(sv, pf))}" placeholder="${ph}" aria-label="Comissão em %">`;
+    $('#conteudo').innerHTML = cabecalho('Comissões', 'Defina a porcentagem que cada profissional ganha. Ex.: corte masculino R$ 35 com 10% = R$ 3,50 de comissão.', '') + `
+      <div class="card p-4 text-sm grid gap-1 mb-4">
+        <p class="font-semibold">Como o sistema decide a porcentagem (da mais específica para a mais geral):</p>
+        <p>1. <b>Célula serviço × profissional</b>: exceção só daquele profissional naquele serviço.</p>
+        <p>2. <b>Padrão do serviço</b>: vale para todos que fazem o serviço.</p>
+        <p>3. <b>Padrão do profissional</b>: usado nos serviços que não têm porcentagem própria.</p>
+        <p class="text-muted">Campo vazio = usa a regra de baixo (o número cinza mostra o valor que será usado). A comissão fica gravada no momento do agendamento; mudar aqui não altera atendimentos já lançados.</p>
+      </div>
+      ${!profs.length || !servs.length ? vazio('Cadastre serviços e profissionais ativos primeiro.') : `
+      <form id="f-comissoes" class="card overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="text-sm w-full">
+            <thead><tr class="border-b border-line text-left">
+              <th class="p-3 font-medium min-w-[10rem]">Serviço</th>
+              <th class="p-3 font-medium text-center bg-brand/5">Padrão do serviço</th>
+              ${profs.map((p) => `<th class="p-3 font-medium text-center whitespace-nowrap">${esc(p.nome)}</th>`).join('')}
+            </tr>
+            <tr class="border-b border-line bg-page">
+              <td class="p-3 text-muted">Padrão do profissional</td><td class="p-3 bg-brand/5"></td>
+              ${profs.map((p) => `<td class="p-2 text-center">${inp(null, p.id, '0')}</td>`).join('')}
+            </tr></thead>
+            <tbody>${servs.map((s) => `
+              <tr class="border-b border-line last:border-0">
+                <td class="p-3"><p class="font-medium">${esc(s.nome)}</p><p class="text-xs text-muted">${brl(s.preco)}</p></td>
+                <td class="p-2 text-center bg-brand/5">${inp(s.id, null, '–')}</td>
+                ${profs.map((p) => `<td class="p-2 text-center">${inp(s.id, p.id, String(efetivo(s.id, p.id)).replace('.', ','))}</td>`).join('')}
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+        <div class="p-4 border-t border-line flex flex-wrap justify-between items-center gap-3">
+          <p class="text-xs text-muted">Valores em %. Ex.: 10 = 10%.</p>
+          <button class="btn btn-primary"><i data-lucide="save" class="w-4 h-4"></i>Salvar comissões</button>
+        </div>
+      </form>`}`;
+    icons();
+    const f = $('#f-comissoes');
+    if (!f) return;
+    f.onsubmit = async (e) => {
+      e.preventDefault();
+      const linhas = [];
+      for (const el of $$('input[data-sv]', f)) {
+        if (el.value === '') continue;
+        const v = Number(el.value);
+        if (!(v >= 0 && v <= 100)) return toast('As porcentagens precisam estar entre 0 e 100.', 'erro');
+        linhas.push({ negocio_id: S.neg.id, servico_id: el.dataset.sv || null, profissional_id: el.dataset.pf || null, percentual: v });
+      }
+      const btn = f.querySelector('.btn-primary'); btn.disabled = true;
+      try {
+        let x = await sb.from('comissoes').delete().eq('negocio_id', S.neg.id);
+        if (x.error) throw x.error;
+        if (linhas.length) { x = await sb.from('comissoes').insert(linhas); if (x.error) throw x.error; }
+        toast('Comissões salvas. Valem para os próximos agendamentos.');
+        abaComissoes();
+      } catch (ex) { toast(msgErro(ex), 'erro'); btn.disabled = false; }
+    };
   }
 
   /* =================================================================
@@ -379,8 +616,22 @@
         { k: 'ordem', r: 'Ordem na lista', t: 'number', padrao: 0 },
         { k: 'ativo', r: 'Atendendo (aparece na página)', t: 'bool', padrao: true }
       ],
-      linha: (p) => `<p class="font-semibold">${esc(p.nome)}${p.ativo ? '' : ' <span class="text-xs text-muted">(inativo)</span>'}</p><p class="text-sm text-muted">${esc(p.funcao || '—')}</p>`,
-      aviso: 'Para tirar alguém da agenda sem perder o histórico, desmarque "Atendendo" em vez de excluir.',
+      preparar: async () => {
+        if (!temEquipe()) return {};
+        const { data } = await sb.from('acessos').select('profissional_id, email').eq('negocio_id', S.neg.id);
+        return Object.fromEntries((data || []).map((a) => [a.profissional_id, a.email]));
+      },
+      linha: (p, acessos) => `<p class="font-semibold">${esc(p.nome)}${p.ativo ? '' : ' <span class="text-xs text-muted">(inativo)</span>'}</p><p class="text-sm text-muted">${esc(p.funcao || '—')}</p>
+        ${temEquipe() ? (acessos[p.id]
+          ? `<p class="mt-2 text-xs flex flex-wrap items-center gap-2"><span class="rounded-full bg-green-500/10 text-green-700 px-2 py-0.5">Login: ${esc(acessos[p.id])}</span><button data-acao="remover-acesso" data-id="${p.id}" class="text-red-600 underline">remover acesso</button></p>`
+          : `<button data-acao="convite" data-id="${p.id}" class="mt-2 btn btn-ghost btn-sm"><i data-lucide="key-round" class="w-4 h-4"></i>Dar acesso ao painel</button>`) : ''}`,
+      aviso: (lista) => {
+        const lim = { essencial: 1, equipe: 6 }[S.neg.plano], ativos = lista.filter((p) => p.ativo).length;
+        return `<p>Plano <b class="text-ink">${PLANOS[S.neg.plano]}</b>: ${lim ? `${ativos} de ${lim} profissionais ativos` : `${ativos} profissionais ativos (sem limite)`}.</p>` +
+          (temEquipe() ? '<p>Com <b class="text-ink">Dar acesso ao painel</b>, o profissional ganha login próprio e vê <b class="text-ink">só a agenda e os ganhos dele</b>. Ele não altera preços, equipe nem dados do negócio.</p>'
+            : '<p>Login individual para profissionais faz parte do plano Equipe.</p>') +
+          '<p>Para tirar alguém da agenda sem perder o histórico, desmarque "Atendendo" em vez de excluir.</p>';
+      },
       aposSalvar: recarregarBase
     },
     depoimentos: {
@@ -396,13 +647,17 @@
   };
 
   async function abaCrud(def) {
+    const aba = S.aba;
     const { data, error } = await sb.from(def.tabela).select('*').eq('negocio_id', S.neg.id).order('ordem').order(def.tabela === 'depoimentos' ? 'autor' : 'nome');
+    const extra = def.preparar ? await def.preparar(data) : null;
+    if (S.aba !== aba) return;
     if (error) { $('#conteudo').innerHTML = vazio(esc(msgErro(error))); return; }
+    const aviso = typeof def.aviso === 'function' ? def.aviso(data, extra) : def.aviso;
     $('#conteudo').innerHTML = cabecalho(def.titulo, def.texto, `<button data-acao="crud-novo" class="btn btn-primary"><i data-lucide="plus" class="w-4 h-4"></i>Adicionar</button>`) +
-      (def.aviso ? `<p class="text-sm text-muted mb-4">${def.aviso}</p>` : '') +
+      (aviso ? `<div class="text-sm text-muted mb-4 grid gap-1">${aviso}</div>` : '') +
       `<div class="grid sm:grid-cols-2 gap-3">${data.length ? data.map((row) => `
         <div class="card p-4 flex items-start justify-between gap-3">
-          <div class="min-w-0">${def.linha(row)}</div>
+          <div class="min-w-0">${def.linha(row, extra)}</div>
           <div class="flex gap-1 shrink-0">
             <button data-acao="crud-editar" data-id="${row.id}" class="btn btn-ghost !p-2" aria-label="Editar"><i data-lucide="pencil" class="w-4 h-4"></i></button>
             <button data-acao="crud-apagar" data-id="${row.id}" class="btn btn-danger !p-2" aria-label="Excluir"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
@@ -646,6 +901,10 @@
             <p class="text-xs text-amber-700">Atenção: mudar isso quebra o link antigo (bio, QR Code impresso).</p>
           </div>
           <label class="flex items-center gap-3 text-sm font-medium sm:col-span-2"><input type="checkbox" name="ativo" class="w-5 h-5" ${n.ativo ? 'checked' : ''}>Página no ar (desmarque para pausar os agendamentos)</label>
+          <div class="sm:col-span-2 rounded-xl bg-page border border-line p-3 text-sm flex flex-wrap items-center justify-between gap-2">
+            <p>Seu plano: <b>${PLANOS[n.plano] || n.plano}</b>${n.plano === 'essencial' ? ' · 1 profissional' : n.plano === 'equipe' ? ' · até 6 profissionais com login individual e comissões' : ' · profissionais ilimitados'}</p>
+            <a href="${waLink(CONFIG.produto.whatsapp, `Olá! Quero mudar o plano do ${n.nome}.`)}" target="_blank" rel="noopener" class="text-brand underline">Mudar de plano</a>
+          </div>
         </div>
         <div class="flex justify-end"><button class="btn btn-primary"><i data-lucide="save" class="w-4 h-4"></i>Salvar</button></div>
       </form>`;
@@ -735,7 +994,7 @@
     if (!b || b.closest('#f-horarios')) return;
     const d = b.dataset;
     switch (d.acao) {
-      case 'sair': await sb.auth.signOut(); S.neg = null; telaAuth('entrar'); break;
+      case 'sair': await sb.auth.signOut(); Object.assign(S, { neg: null, papel: 'dono', meuProf: null, aba: 'agenda', filtroProf: '' }); telaAuth('entrar'); break;
       case 'dia': S.dia = isoDate(new Date(parseISO(S.dia).getTime() + Number(d.d) * 86400000 + 43200000)); abaAgenda(); break;
       case 'hoje': S.dia = isoDate(new Date()); abaAgenda(); break;
       case 'atualizar': abaAgenda(); break;
@@ -743,9 +1002,50 @@
       case 'novo-agendamento': novoAgendamento(); break;
       case 'status': {
         if (d.s === 'cancelado' && !confirma('Cancelar este agendamento? O horário volta a ficar livre.')) return;
-        const { error } = await sb.from('agendamentos').update({ status: d.s }).eq('id', d.id);
+        const { error } = await sb.rpc('mudar_status', { p_id: d.id, p_status: d.s });
         if (error) return toast(msgErro(error), 'erro');
         abaAgenda(); break;
+      }
+      case 'concluir': concluir(d.id); break;
+      case 'periodo': S.per = d.p; abaFinanceiro(); break;
+      case 'csv': baixarCSV(); break;
+      case 'fechamento': enviarFechamento(Number(d.i)); break;
+      case 'convite': {
+        const p = S.profs.find((x) => x.id === d.id);
+        const { data: cod, error } = await sb.rpc('gerar_convite', { p_profissional: d.id });
+        if (error) return toast(msgErro(error), 'erro');
+        const link = new URL(`./?convite=${cod}`, location.href.split(/[?#]/)[0]).href;
+        const msg = `Olá, ${p.nome}! Criei seu acesso à agenda do ${S.neg.nome}.\n\n1. Abra: ${link}\n2. Crie sua conta com seu e-mail e uma senha.\n\nPronto: você vai ver sua agenda e seus ganhos. (Código: ${cod}, vale por 7 dias)`;
+        modal({
+          titulo: `Acesso para ${p.nome}`, ok: 'Fechar',
+          corpo: `<p class="text-sm text-muted">Envie o link para ${esc(p.nome)}. Ao abrir, ele cria a conta com o próprio e-mail e já entra vendo <b>só a agenda e os ganhos dele</b>.</p>
+            <div class="text-center rounded-2xl bg-brand/5 border border-brand/20 p-4"><p class="text-xs text-muted">Código de convite (vale 7 dias, uso único)</p><p class="font-mono text-3xl font-bold tracking-[.3em] text-brand mt-1">${cod}</p></div>
+            <code class="block rounded-xl bg-page border border-line px-3 py-2.5 text-sm [overflow-wrap:anywhere]">${esc(link)}</code>
+            <div class="grid sm:grid-cols-2 gap-2">
+              <button type="button" data-copiar="${esc(link)}" class="btn btn-ghost"><i data-lucide="copy" class="w-4 h-4"></i>Copiar link</button>
+              <a href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" class="btn btn-wa"><i data-lucide="send" class="w-4 h-4"></i>Enviar no WhatsApp</a>
+            </div>`,
+          async aoSalvar() {}
+        });
+        break;
+      }
+      case 'remover-acesso': {
+        if (!confirma('Remover o login deste profissional? Ele deixa de ver a agenda na hora. O histórico de atendimentos continua.')) return;
+        const { error } = await sb.from('acessos').delete().eq('profissional_id', d.id);
+        if (error) return toast(msgErro(error), 'erro');
+        toast('Acesso removido.'); abaCrud(CRUD.equipe); break;
+      }
+      case 'tenho-convite': {
+        modal({
+          titulo: 'Entrar na equipe', ok: 'Confirmar',
+          corpo: '<p class="text-sm text-muted">Digite o código que o dono do negócio enviou para você.</p><label class="label">Código<input name="cod" class="input uppercase tracking-widest text-center text-xl" maxlength="6" required autocomplete="off"></label>',
+          async aoSalvar(f) {
+            const { error } = await sb.rpc('aceitar_convite', { p_codigo: f.cod.value });
+            if (error) throw error;
+            toast('Acesso liberado!'); setTimeout(carregarNegocio, 0);
+          }
+        });
+        break;
       }
       case 'crud-novo': CRUD._atual.abrir(null); break;
       case 'crud-editar': CRUD._atual.abrir(CRUD._atual.data.find((r) => r.id === d.id)); break;
@@ -781,6 +1081,11 @@
   document.addEventListener('change', (e) => {
     const a = e.target.dataset.acaoChange;
     if (a === 'dia-escolhido' && e.target.value) { S.dia = e.target.value; abaAgenda(); }
+    if ((a === 'per-ini' || a === 'per-fim') && e.target.value) {
+      S[a === 'per-ini' ? 'perIni' : 'perFim'] = e.target.value;
+      if (S.perFim < S.perIni) S.perFim = S.perIni;
+      abaFinanceiro();
+    }
     if (a === 'upload' && e.target.files.length) enviarFotos(e.target.files);
   });
 

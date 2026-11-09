@@ -25,21 +25,21 @@ window.CONFIG = {
         preco: null,
         periodo: '/mês',
         destaque: false,
-        itens: ['1 profissional', 'Página de agendamento com seu link', 'Painel com agenda do dia', 'Lembretes pelo WhatsApp com 1 clique']
+        itens: ['1 profissional (ideal para quem atende sozinho)', 'Página de agendamento com seu link', 'Agenda sem conflito de horário', 'Lembrete no WhatsApp com 1 clique', 'Financeiro: faturamento por semana e mês']
       },
       {
         nome: 'Equipe',
         preco: null,
         periodo: '/mês',
         destaque: true,
-        itens: ['Até 6 profissionais', 'Tudo do Essencial', 'Portfólio com fotos', 'Folgas e bloqueios por profissional', 'QR Code para o balcão']
+        itens: ['Até 6 profissionais', 'Tudo do Essencial', 'Login individual: cada profissional vê só a própria agenda e ganhos', 'Comissão automática por serviço e por profissional', 'Relatório por profissional e fechamento pelo WhatsApp', 'Mais de 6 profissionais: sob consulta']
       },
       {
         nome: 'Implantação',
         preco: null,
         periodo: 'pagamento único',
         destaque: false,
-        itens: ['Cadastro dos seus serviços e equipe', 'Página com as cores do seu negócio', 'Treinamento rápido', 'Configuração da mensagem automática do WhatsApp']
+        itens: ['Cadastro dos seus serviços, preços e equipe', 'Comissões configuradas', 'Página com as cores do seu negócio', 'Mensagem automática do WhatsApp Business e QR Code', 'Treinamento rápido do dono e da equipe']
       }
     ]
   }
