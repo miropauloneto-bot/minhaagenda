@@ -1,6 +1,6 @@
 /* Cores ligadas às variáveis CSS: cada negócio troca o tema sem recompilar. */
 module.exports = {
-  content: ['./*.html', './agendar/*.html', './painel/*.html', './privacidade/*.html', './assets/*.js'],
+  content: ['./*.html', './{config,nichos,comum,vendas,agendar,painel,tema-escuro,privacidade}.js'],
   darkMode: ['class', '[data-tema="escuro"]'],
   theme: {
     extend: {

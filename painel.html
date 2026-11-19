@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-src 'none'; base-uri 'self'; form-action 'self'; object-src 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Painel · MinhaAgenda</title>
+  <meta name="theme-color" content="#3d35f5">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <script src="tema-escuro.js"></script>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body class="min-h-screen bg-sunken text-ink">
+
+  <div id="v-carregando" class="grid min-h-screen place-items-center">
+    <div class="h-10 w-10 animate-spin rounded-full border-4 border-line border-t-brand" role="status" aria-label="Carregando"></div>
+  </div>
+
+  <!-- Login, cadastro e primeiro acesso -->
+  <div id="v-auth" class="hidden min-h-screen"></div>
+
+  <!-- Painel -->
+  <div id="v-app" class="hidden">
+    <div class="md:flex">
+      <!-- Menu lateral (computador) -->
+      <aside class="pontilhado sticky top-0 hidden h-screen w-64 shrink-0 flex-col bg-nav text-white md:flex" aria-label="Menu">
+        <div class="flex items-center gap-3 px-5 py-5">
+          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/10 text-2xl" data-slot="emoji"></span>
+          <div class="min-w-0"><p class="truncate font-display font-bold" data-slot="nome-negocio"></p><p class="truncate text-xs text-white/60" data-slot="papel"></p></div>
+        </div>
+        <nav class="flex-1 overflow-y-auto px-3 pb-4" data-slot="nav-lateral"></nav>
+        <div class="grid gap-1 border-t border-white/10 p-3">
+          <a data-slot="link-publico" target="_blank" rel="noopener" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white"><i data-lucide="external-link" class="h-4 w-4"></i>Ver minha página</a>
+          <button type="button" data-acao="tema" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white"><i data-lucide="moon" class="h-4 w-4"></i><span data-slot="tema-rotulo">Modo escuro</span></button>
+          <button type="button" data-acao="sair" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white"><i data-lucide="log-out" class="h-4 w-4"></i>Sair</button>
+        </div>
+      </aside>
+
+      <div class="min-w-0 flex-1">
+        <!-- Topo (celular) -->
+        <header class="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 bg-nav px-4 text-white md:hidden">
+          <div class="flex min-w-0 items-center gap-2"><span class="text-xl" data-slot="emoji"></span><p class="truncate font-display font-bold" data-slot="nome-negocio"></p></div>
+          <div class="flex items-center gap-1">
+            <button type="button" data-acao="tema" class="btn btn-icon text-white hover:bg-white/10" aria-label="Alternar modo escuro"><i data-lucide="moon" class="h-5 w-5"></i></button>
+            <a data-slot="link-publico" target="_blank" rel="noopener" class="btn btn-icon text-white hover:bg-white/10" aria-label="Ver minha página"><i data-lucide="external-link" class="h-5 w-5"></i></a>
+          </div>
+        </header>
+        <main id="conteudo" class="mx-auto max-w-5xl px-4 pb-32 pt-6 md:px-8 md:pb-16 md:pt-10"></main>
+      </div>
+    </div>
+
+    <!-- Menu inferior (celular) -->
+    <nav class="safe-bottom fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-line bg-surface/95 px-1 pt-1.5 backdrop-blur-lg md:hidden" data-slot="nav-inferior" aria-label="Menu"></nav>
+  </div>
+
+  <!-- "Mais" no celular -->
+  <dialog id="mais" class="mb-0 mt-auto w-full max-w-none rounded-t-[1.75rem] bg-surface p-0 sm:m-auto sm:max-w-md sm:rounded-[1.75rem]">
+    <div class="safe-bottom p-4">
+      <div class="mx-auto mb-3 h-1.5 w-10 rounded-full bg-line"></div>
+      <div data-slot="nav-mais"></div>
+      <button type="button" data-acao="sair" class="mt-2 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left font-semibold text-bad hover:bg-sunken"><i data-lucide="log-out" class="h-5 w-5"></i>Sair</button>
+    </div>
+  </dialog>
+
+  <!-- Janela de formulário reaproveitável -->
+  <dialog id="modal" class="w-[min(94vw,560px)] max-h-[90vh] rounded-[1.5rem] bg-surface p-0">
+    <form method="dialog" id="modal-form" class="flex max-h-[90vh] flex-col">
+      <div class="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
+        <p class="font-display text-lg font-bold" data-slot="modal-titulo"></p>
+        <button value="cancelar" formnovalidate class="btn btn-ghost btn-icon !border-0" aria-label="Fechar"><i data-lucide="x" class="h-5 w-5"></i></button>
+      </div>
+      <div class="grid gap-4 overflow-y-auto p-5" data-slot="modal-corpo"></div>
+      <p class="hidden px-5 text-sm font-semibold text-bad" data-slot="modal-erro" role="alert"></p>
+      <div class="flex justify-end gap-2 border-t border-line px-5 py-4" data-slot="modal-botoes">
+        <button value="cancelar" formnovalidate class="btn btn-ghost" data-slot="modal-cancelar">Cancelar</button>
+        <button value="ok" class="btn btn-primary" data-slot="modal-ok">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="icones.js"></script>
+  <script src="supabase.js"></script>
+  <script src="qrcode.js"></script>
+  <script src="config.js"></script>
+  <script src="nichos.js"></script>
+  <script src="comum.js"></script>
+  <script src="painel.js"></script>
+</body>
+</html>

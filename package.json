@@ -4,9 +4,9 @@
   "description": "Agendamento online para beleza e bem-estar",
   "scripts": {
     "build": "npm run build:icons && npm run build:css",
-    "build:css": "tailwindcss -c tailwind.config.js -i src/app.css -o assets/app.css --minify",
-    "build:icons": "node scripts/build-icons.mjs",
-    "dev": "tailwindcss -c tailwind.config.js -i src/app.css -o assets/app.css --watch"
+    "build:css": "tailwindcss -c tailwind.config.js -i estilo-fonte.css -o app.css --minify",
+    "build:icons": "node gerar-icones.mjs",
+    "dev": "tailwindcss -c tailwind.config.js -i estilo-fonte.css -o app.css --watch"
   },
   "devDependencies": {
     "lucide": "0.460.0",

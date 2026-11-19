@@ -7,7 +7,7 @@
 	root * /srv
 
 	# Arquivos internos do projeto nunca são servidos
-	@interno path /node_modules/* /src/* /scripts/* /supabase/* /deploy/* /.git/* /package.json /package-lock.json /tailwind.config.js /README.md /.gitignore /.nojekyll /verificar.html
+	@interno path /node_modules/* /.git/* /.env /env.exemplo /schema.sql /package.json /package-lock.json /tailwind.config.js /README.md /.gitignore /.nojekyll /verificar.html /estilo-fonte.css /gerar-icones.mjs /Caddyfile /docker-compose.yml /atualizar.sh
 	respond @interno 404
 
 	header {
@@ -20,14 +20,21 @@
 		-Server
 	}
 
+	# Endereços bonitos e links antigos: /painel/ e /agendar/?n=... continuam funcionando
+	redir /painel /painel.html 301
+	redir /painel/ /painel.html 301
+	redir /agendar /agendar.html?{query} 301
+	redir /agendar/ /agendar.html?{query} 301
+	redir /privacidade/ /privacidade.html 301
+
 	# Fontes: cache longo. Páginas, CSS e JS: sempre conferem se há versão nova.
-	@fontes path /assets/fonts/*
+	@fontes path *.woff2
 	header @fontes Cache-Control "public, max-age=31536000, immutable"
-	@resto not path /assets/fonts/*
+	@resto not path *.woff2
 	header @resto Cache-Control "no-cache"
 
 	# O painel nunca aparece no Google
-	@painel path /painel/*
+	@painel path /painel.html
 	header @painel X-Robots-Tag "noindex, nofollow"
 
 	handle_errors {

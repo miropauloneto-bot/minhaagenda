@@ -5,10 +5,10 @@ Sistema completo para salões, barbearias, esmalterias, clínicas de estética, 
 | Página | Endereço | Para quem |
 |---|---|---|
 | Página de vendas | `/` | Seus anúncios e visitas |
-| Demonstrações | `/agendar/?demo=barbearia` | Mostrar sem banco de dados |
-| Página do negócio | `/agendar/?n=nome-do-negocio` | O cliente final agendar |
-| Painel | `/painel/` | Dono e profissionais |
-| Privacidade | `/privacidade/` | Exigida por lei e pelos anúncios do Instagram/Facebook |
+| Demonstrações | `/agendar.html?demo=barbearia` | Mostrar sem banco de dados |
+| Página do negócio | `/agendar.html?n=nome-do-negocio` | O cliente final agendar |
+| Painel | `/painel.html` | Dono e profissionais |
+| Privacidade | `/privacidade.html` | Exigida por lei e pelos anúncios do Instagram/Facebook |
 
 ---
 
@@ -36,27 +36,35 @@ Sistema completo para salões, barbearias, esmalterias, clínicas de estética, 
   - tela **Início**: próximo cliente, números do dia e da semana, atalhos;
   - aba **Clientes**: histórico, gasto total, faltas, filtro "sumidos há 45+ dias" com mensagem de retorno pronta.
 - **Segurança:** veja a seção [Segurança](#segurança).
-- **Pronto para VPS:** Docker + Caddy, com HTTPS automático e cabeçalhos de segurança.
+- **Pronto para VPS:** Docker + Caddy (`Caddyfile`, `docker-compose.yml`), com HTTPS automático e cabeçalhos de segurança.
 - **Mais rápido no celular:**
   - nenhuma biblioteca vem de fora: Tailwind compilado, ícones só os usados (12 KB em vez de 350 KB) e fontes no próprio site;
   - sem Google Fonts, o que também evita enviar dados de visitantes para terceiros.
 
 ---
 
-## Atualizar da versão 2 para a 3 (nenhum dado é perdido)
+## Enviar para o GitHub (todos os arquivos ficam soltos, sem pastas)
 
-1. **Banco:** Supabase → **SQL Editor** → *New query* → cole **todo** o `supabase/schema.sql` → **Run** → confirme o aviso. Deve aparecer *Success*.
+O projeto não tem mais pastas: **todos os arquivos ficam soltos**, um ao lado do outro. Assim o envio pelo navegador funciona de primeira.
+
+1. **Banco (uma vez):** Supabase → **SQL Editor** → *New query* → cole **todo** o `schema.sql` → **Run** → confirme o aviso. Deve aparecer *Success*.
 2. **Senha mínima:** Supabase → **Authentication → Sign In / Providers → Email** → *Minimum password length* = **8**.
-3. **Site:** use o **GitHub Desktop**, que envia todas as pastas sem pular nenhuma (o envio pelo navegador costuma esquecer pastas dentro de pastas):
-   1. Instale em **desktop.github.com** e entre com sua conta.
-   2. **File → Clone repository** → escolha `minhaagenda` → **Clone**.
-   3. **Repository → Show in Explorer**. Apague **tudo o que aparece** na pasta. A pasta oculta `.git` não aparece e não deve ser apagada.
-   4. Copie para dentro dela **todo o conteúdo** da pasta `minhaagenda` do zip.
-   5. De volta ao GitHub Desktop: em *Summary* escreva `Versão 3` → **Commit to main** → **Push origin**.
-4. Espere 1 a 3 minutos e abra **`https://SEU-USUARIO.github.io/minhaagenda/verificar.html`**. Ela confere arquivo por arquivo e precisa mostrar **"Tudo certo!"**.
-5. Abra o site e o painel com **Ctrl+F5**.
+3. **Endereço do painel:** Supabase → **Authentication → URL Configuration** → em *Site URL* e em *Redirect URLs*, coloque `https://SEU-USUARIO.github.io/minhaagenda/painel.html`.
+4. **Site:** abra o repositório no GitHub → **Add file → Upload files** → abra a pasta do zip, aperte **Ctrl+A** para selecionar **todos os arquivos** e arraste para a página → **Commit changes**.
+   - A pasta `node_modules` não vem no zip. Se um dia ela aparecer no seu computador, não envie.
+5. Espere 1 a 3 minutos e abra `https://SEU-USUARIO.github.io/minhaagenda/verificar.html`. Precisa aparecer **"Tudo certo!"**.
 
-> **Não teste com duplo clique no `index.html`.** Aberto direto do computador, o navegador bloqueia fontes e conexões. Teste pelo endereço publicado, ou no VS Code com a extensão **Live Server**.
+**Endereços novos:**
+
+| Página | Endereço |
+|---|---|
+| Painel | `.../minhaagenda/painel.html` |
+| Página de um negócio | `.../minhaagenda/agendar.html?n=nome-do-negocio` |
+| Demonstração | `.../minhaagenda/agendar.html?demo=barbearia` |
+
+> **Faxina opcional:** as pastas antigas (`agendar/`, `painel/`, `assets/`, `supabase/`) não são mais usadas. Para apagar: no GitHub, abra cada arquivo dentro delas → **⋯ → Delete file** → **Commit changes**. Quando todos os arquivos de uma pasta forem apagados, a pasta some.
+
+> **Não teste com duplo clique no `index.html`.** Teste pelo endereço publicado, ou no VS Code com a extensão **Live Server**.
 
 ---
 
@@ -64,17 +72,17 @@ Sistema completo para salões, barbearias, esmalterias, clínicas de estética, 
 
 ### 1. Banco no Supabase
 1. **supabase.com** → *New project* → região **South America (São Paulo)** → guarde a senha do banco.
-2. **SQL Editor** → cole `supabase/schema.sql` → **Run**.
+2. **SQL Editor** → cole `schema.sql` → **Run**.
 3. **Authentication → Sign In / Providers → Email:**
    - desligue **Confirm email**;
    - coloque o tamanho mínimo da senha em **8**.
-4. **Project Settings → API Keys:** copie a **Project URL** e a **Publishable key** para `assets/config.js`.
+4. **Project Settings → API Keys:** copie a **Project URL** e a **Publishable key** para `config.js`.
    **Nunca** use a *secret key* / *service_role*.
 
 ### 2. Site no ar
 - **Para testar (grátis):** GitHub → repositório **público** → **Settings → Pages** → branch `main`, pasta `/ (root)`.
 - **Para clientes pagantes:** use a **VPS** (abaixo) ou o **Cloudflare Pages** ligado ao repositório. As regras do GitHub Pages não permitem uso como software comercial.
-- Em qualquer caso, no Supabase vá em **Authentication → URL Configuration** e coloque o endereço do painel (`https://seudominio.com.br/painel/`) em *Site URL* e em *Redirect URLs*.
+- Em qualquer caso, no Supabase vá em **Authentication → URL Configuration** e coloque o endereço do painel (`https://seudominio.com.br/painel.html`) em *Site URL* e em *Redirect URLs*.
 
 ---
 
@@ -101,8 +109,8 @@ sudo usermod -aG docker $USER && newgrp docker
 **3. Baixe o site e configure o domínio:**
 ```bash
 git clone https://github.com/SEU-USUARIO/minhaagenda.git
-cd minhaagenda/deploy
-cp .env.exemplo .env
+cd minhaagenda
+cp env.exemplo .env
 nano .env        # troque para DOMINIO=seudominio.com.br
 docker compose up -d
 ```
@@ -111,7 +119,7 @@ Em 1 a 2 minutos, `https://seudominio.com.br` está no ar. O certificado HTTPS �
 
 **Para atualizar depois** (depois de enviar as mudanças ao GitHub):
 ```bash
-cd ~/minhaagenda && ./deploy/atualizar.sh
+cd ~/minhaagenda && ./atualizar.sh
 ```
 
 **Boas práticas na VPS:**
@@ -119,23 +127,23 @@ cd ~/minhaagenda && ./deploy/atualizar.sh
 - não use o usuário `root` no dia a dia;
 - ative os backups da própria VPS no painel do provedor.
 
-> Se um dia você usar um **domínio próprio no Supabase** (em vez de `xxxx.supabase.co`), acrescente esse endereço em `connect-src` e `img-src` no `deploy/Caddyfile` e na linha `Content-Security-Policy` do topo de cada `index.html`.
+> Se um dia você usar um **domínio próprio no Supabase** (em vez de `xxxx.supabase.co`), acrescente esse endereço em `connect-src` e `img-src` no `Caddyfile` e na linha `Content-Security-Policy` do topo de cada `index.html`.
 
 ---
 
 ## Editar o visual
 
-As páginas usam `assets/app.css`, que é **gerado** a partir de `src/app.css`.
+As páginas usam `app.css`, que é **gerado** a partir de `estilo-fonte.css`.
 
 - **Mudou só textos ou dados** (`config.js`, `nichos.js`, textos dos HTML)? Não precisa fazer nada.
 - **Mudou classes de estilo ou cores?** No VS Code, com o [Node.js](https://nodejs.org) instalado, rode:
 ```bash
 npm install      # só na primeira vez
-npm run build    # gera assets/app.css e assets/vendor/icones.js
+npm run build    # gera app.css e icones.js
 ```
 - Usou um **ícone novo** do [Lucide](https://lucide.dev/icons)? Rode `npm run build` também: só os ícones usados entram no site.
-- **Cores da sua marca:** variáveis `--c-*` no início de `src/app.css`.
-- **Cores dos negócios:** `assets/nichos.js`, ou a cor escolhida pelo dono no painel.
+- **Cores da sua marca:** variáveis `--c-*` no início de `estilo-fonte.css`.
+- **Cores dos negócios:** `nichos.js`, ou a cor escolhida pelo dono no painel.
 
 ---
 
@@ -163,7 +171,7 @@ npm run build    # gera assets/app.css e assets/vendor/icones.js
 - **Na VPS:**
   - HTTPS obrigatório (HSTS);
   - proteção contra o site ser embutido em outros (clickjacking);
-  - arquivos internos (`supabase/`, `src/`, `package.json`…) nunca são servidos;
+  - arquivos internos (`schema.sql`, `package.json`, `Caddyfile`…) nunca são servidos;
   - o painel não aparece no Google.
 - **Senhas:** mínimo de 8 caracteres com letras e números. Configure o mesmo mínimo no Supabase (Passo 3 da instalação).
 - **Plano e suspensão** só mudam pelo Supabase. O dono não consegue alterar.
@@ -179,8 +187,8 @@ npm run build    # gera assets/app.css e assets/vendor/icones.js
 
 - **Link do anúncio:** use `https://seudominio.com.br/?utm_source=instagram`. Quando a pessoa clica em qualquer botão de WhatsApp, a mensagem chega com **"(vim pelo Instagram)"**, e você sabe de onde veio cada contato. Também funciona `facebook`, `tiktok` e `google`.
 - **Link direto para uma demonstração:** `https://seudominio.com.br/?nicho=barbearia#demo` abre a página já com a demonstração do nicho.
-- **Imagem de compartilhamento:** `assets/og-image.png` aparece quando o link é postado no Instagram, WhatsApp e Facebook.
-- **Política de privacidade:** use `https://seudominio.com.br/privacidade/`, exigida pela Meta em formulários de anúncio.
+- **Imagem de compartilhamento:** `og-image.png` aparece quando o link é postado no Instagram, WhatsApp e Facebook.
+- **Política de privacidade:** use `https://seudominio.com.br/privacidade.html`, exigida pela Meta em formulários de anúncio.
 - **Indicação no rodapé:** cada página de cliente tem no rodapé "Agendamento online por MinhaAgenda", com link rastreado (`utm_source=rodape`). Cliente do salão que gostou chega até você.
 
 ---
@@ -189,7 +197,7 @@ npm run build    # gera assets/app.css e assets/vendor/icones.js
 
 ### Cadastrar um cliente novo (na visita ou depois)
 
-1. Abra `/painel/` → **Criar conta** com o **e-mail do dono do negócio** e uma senha provisória.
+1. Abra `/painel.html` → **Criar conta** com o **e-mail do dono do negócio** e uma senha provisória.
 2. Crie o negócio, ajuste com ele serviços, preços, equipe e horários.
 3. Na aba **Divulgar**:
    - copie o texto para a **bio do Instagram**;
@@ -219,7 +227,7 @@ No Supabase, **Table Editor** mostra todas as tabelas de todos os clientes:
 
 ### Atualizar o sistema
 
-Altere os arquivos no VS Code → `git add .` → `git commit -m "o que mudou"` → `git push`. Na VPS, rode `./deploy/atualizar.sh`. No GitHub Pages ou Cloudflare Pages, a publicação é automática.
+Altere os arquivos no VS Code → `git add .` → `git commit -m "o que mudou"` → `git push`. Na VPS, rode `./atualizar.sh`. No GitHub Pages ou Cloudflare Pages, a publicação é automática.
 
 ---
 
@@ -235,7 +243,7 @@ Altere os arquivos no VS Code → `git add .` → `git commit -m "o que mudou"` 
 - Toda conta nova começa no **Equipe** (bom para teste grátis). Depois você ajusta pelo Table Editor.
 - **Implantação** não é um plano do sistema: é o seu serviço de cadastrar tudo para o cliente, cobrado uma vez.
 - O plano **Ilimitado** não aparece na página de vendas. Use para salões grandes, com preço combinado.
-- Textos e preços dos planos na página de vendas: `assets/config.js`.
+- Textos e preços dos planos na página de vendas: `config.js`.
 
 ## Equipe, comissões e financeiro
 
@@ -272,7 +280,7 @@ A comissão é **gravada em cada atendimento**. Mudar a regra hoje não muda o q
 
 **Na conversa (5 minutos):**
 1. *"Quanto tempo por dia você passa respondendo 'tem horário?' no WhatsApp?"*
-2. Entregue o celular com `/agendar/?demo=NICHO` e peça para ele marcar um horário como se fosse cliente.
+2. Entregue o celular com `/agendar.html?demo=NICHO` e peça para ele marcar um horário como se fosse cliente.
 3. Mostre no painel o agendamento que acabou de chegar, o botão de **lembrete no WhatsApp** e o valor previsto do dia.
 4. Mostre que **não dá para marcar dois clientes no mesmo horário**.
 5. Mostre a aba **Divulgar**: link da bio, resposta automática do WhatsApp e QR Code.
@@ -292,12 +300,12 @@ A aba **Clientes** é montada sozinha a partir dos agendamentos:
 
 | O quê | Arquivo |
 |---|---|
-| Nome do produto, seu WhatsApp, e-mail, cidade, **preços dos planos** | `assets/config.js` |
-| Cores, fonte, textos, serviços e horários de exemplo de cada nicho | `assets/nichos.js` |
-| Cores da sua marca (vendas e painel) | `src/app.css` (depois `npm run build`) |
-| Textos da página de vendas | `index.html` e `assets/vendas.js` |
-| Perguntas e passos das páginas dos negócios | `TEXTOS` em `assets/nichos.js` |
-| Política de privacidade | `privacidade/index.html` (peça para um advogado revisar) |
+| Nome do produto, seu WhatsApp, e-mail, cidade, **preços dos planos** | `config.js` |
+| Cores, fonte, textos, serviços e horários de exemplo de cada nicho | `nichos.js` |
+| Cores da sua marca (vendas e painel) | `estilo-fonte.css` (depois `npm run build`) |
+| Textos da página de vendas | `index.html` e `vendas.js` |
+| Perguntas e passos das páginas dos negócios | `TEXTOS` em `nichos.js` |
+| Política de privacidade | `privacidade.html` (peça para um advogado revisar) |
 
 ---
 
@@ -319,29 +327,25 @@ A aba **Clientes** é montada sozinha a partir dos agendamentos:
 
 ---
 
-## Estrutura dos arquivos
+## Estrutura dos arquivos (todos soltos na raiz)
 
-```
-minhaagenda/
-├── index.html               Página de vendas
-├── agendar/index.html       Página pública de cada negócio (+ demonstrações)
-├── painel/index.html        Painel do dono e da equipe
-├── privacidade/index.html   Política de privacidade
-├── assets/
-│   ├── config.js            ← SUAS configurações (Supabase, WhatsApp, planos)
-│   ├── nichos.js            Modelos por nicho (cores, serviços, textos)
-│   ├── comum.js             Funções compartilhadas (segurança, datas, WhatsApp)
-│   ├── vendas.js            Interações da página de vendas
-│   ├── agendar.js           Página de agendamento
-│   ├── painel.js            Painel
-│   ├── tema-escuro.js       Aplica o modo escuro sem piscar
-│   ├── privacidade.js       Preenche a política
-│   ├── app.css              Visual compilado (gerado, não edite)
-│   ├── fonts/               Fontes do próprio site
-│   ├── vendor/              Supabase, QR Code e ícones (sem CDN externo)
-│   ├── favicon.svg, og-image.png
-├── src/app.css              Fonte do visual (edite aqui)
-├── scripts/build-icons.mjs  Gera o pacote de ícones
-├── supabase/schema.sql      Banco de dados (rodar no Supabase)
-└── deploy/                  VPS: Caddyfile, docker-compose.yml, .env.exemplo, atualizar.sh
-```
+| Arquivo | O que é |
+|---|---|
+| `index.html` | Página de vendas |
+| `agendar.html` | Página pública de cada negócio (e as demonstrações) |
+| `painel.html` | Painel do dono e da equipe |
+| `privacidade.html` | Política de privacidade |
+| `verificar.html` | Confere se todos os arquivos subiram |
+| `config.js` | **Suas configurações** (Supabase, WhatsApp, planos) |
+| `nichos.js` | Modelos por nicho (cores, serviços, textos) |
+| `comum.js` | Funções compartilhadas (segurança, datas, WhatsApp) |
+| `vendas.js` · `agendar.js` · `painel.js` | Lógica de cada página |
+| `tema-escuro.js` · `privacidade.js` | Modo escuro e preenchimento da política |
+| `app.css` | Visual compilado (gerado, não edite) |
+| `estilo-fonte.css` | Fonte do visual (edite aqui e rode `npm run build`) |
+| `icones.js` · `supabase.js` · `qrcode.js` | Bibliotecas servidas pelo próprio site |
+| `*.woff2` | Fontes |
+| `favicon.svg` · `og-image.png` | Ícone da aba e imagem de compartilhamento |
+| `schema.sql` | Banco de dados (colar no SQL Editor do Supabase) |
+| `Caddyfile` · `docker-compose.yml` · `env.exemplo` · `atualizar.sh` | Para subir na VPS |
+| `package.json` · `tailwind.config.js` · `gerar-icones.mjs` | Ferramentas para gerar o visual |

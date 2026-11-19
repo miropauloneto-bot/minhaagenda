@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'">
+  <title>Política de privacidade · MinhaAgenda</title>
+  <meta name="description" content="Como a MinhaAgenda trata os dados de quem agenda e de quem usa o painel.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body class="bg-page text-ink">
+  <header class="border-b border-line">
+    <div class="wrap flex h-16 items-center">
+      <a href="index.html" class="flex items-center gap-2.5 font-display text-xl font-extrabold"><span class="grid h-9 w-9 place-items-center rounded-[.7rem] bg-brand text-brand-contrast"><i data-lucide="calendar-check-2" class="h-5 w-5"></i></span><span data-slot="produto">MinhaAgenda</span></a>
+    </div>
+  </header>
+  <main class="wrap max-w-3xl py-12 md:py-16">
+    <h1 class="text-4xl font-bold md:text-5xl">Política de privacidade</h1>
+    <p class="mt-3 text-sm text-muted">Última atualização: <span data-slot="data">novembro de 2026</span></p>
+
+    <div class="mt-10 grid gap-8 leading-relaxed [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-bold [&_ul]:mt-3 [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:pl-5 [&_p]:mt-3 [&_p]:text-ink/85">
+      <section>
+        <h2>Quem é responsável pelos seus dados</h2>
+        <p>Quando você agenda um horário, os seus dados são do <b>estabelecimento onde você agendou</b> (salão, barbearia, clínica etc.), que decide como usá-los para te atender. A <span data-slot="produto">MinhaAgenda</span> fornece o sistema e guarda esses dados em nome do estabelecimento, seguindo esta política.</p>
+      </section>
+
+      <section>
+        <h2>Quais dados coletamos e por quê</h2>
+        <ul>
+          <li><b>Nome e WhatsApp:</b> para reservar o horário, confirmar e lembrar você do atendimento.</li>
+          <li><b>Serviços, profissional, data, hora e observação:</b> para o estabelecimento saber o que fazer e quando.</li>
+          <li><b>Valor e forma de pagamento</b> (registrados pelo estabelecimento): para o controle financeiro dele.</li>
+          <li><b>Um código gerado a partir da sua rede de internet</b>, que não permite descobrir o seu endereço IP: só para bloquear reservas em massa feitas por robôs.</li>
+          <li><b>Para quem usa o painel:</b> e-mail e senha de acesso. A senha é guardada de forma criptografada e ninguém consegue vê-la.</li>
+        </ul>
+        <p>Não usamos cookies de rastreamento nem de anúncios. Se você marcar "Lembrar meus dados neste aparelho", seu nome e WhatsApp ficam salvos só no seu próprio navegador, e você pode apagar quando quiser.</p>
+      </section>
+
+      <section>
+        <h2>Com quem os dados são compartilhados</h2>
+        <p>Somente com o estabelecimento onde você agendou e com os serviços técnicos que mantêm o sistema funcionando (hospedagem e banco de dados). Não vendemos nem cedemos seus dados para ninguém.</p>
+      </section>
+
+      <section>
+        <h2>Por quanto tempo guardamos</h2>
+        <p>Enquanto o estabelecimento usar o sistema, para manter o seu histórico de atendimentos. Se o estabelecimento deixar de usar o sistema, os dados são apagados. Você pode pedir a exclusão antes disso.</p>
+      </section>
+
+      <section>
+        <h2>Seus direitos</h2>
+        <p>Pela Lei Geral de Proteção de Dados (LGPD), você pode pedir para ver, corrigir ou apagar seus dados, além de saber com quem eles foram compartilhados. Fale direto com o estabelecimento onde agendou ou escreva para <a data-slot-href="email" class="font-semibold text-brand underline" data-slot="email"></a>.</p>
+      </section>
+
+      <section>
+        <h2>Segurança</h2>
+        <p>A conexão é sempre criptografada (HTTPS). Cada estabelecimento só acessa os próprios dados, e cada profissional da equipe só vê os próprios atendimentos.</p>
+      </section>
+
+      <p class="rounded-2xl bg-sunken p-4 text-sm text-muted">Este texto é um modelo. Antes de vender em escala, peça para um advogado revisar e ajustar à sua realidade.</p>
+    </div>
+  </main>
+  <footer class="wrap py-10 text-sm text-muted"><a href="index.html" class="underline">Voltar para o início</a></footer>
+
+  <script src="icones.js"></script>
+  <script src="config.js"></script>
+  <script src="privacidade.js"></script>
+</body>
+</html>

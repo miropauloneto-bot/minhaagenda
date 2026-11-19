@@ -2,68 +2,314 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'">
-  <title>Política de privacidade · MinhaAgenda</title>
-  <meta name="description" content="Como a MinhaAgenda trata os dados de quem agenda e de quem usa o painel.">
-  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="../assets/app.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>MinhaAgenda · Agenda online para salões, barbearias e estética</title>
+  <meta name="description" content="Seus clientes marcam sozinhos pelo link da bio. Agenda sem conflito, comissão da equipe e financeiro no celular. Para salões, barbearias, esmalterias, estética, spas, lash e tatuagem.">
+  <meta name="theme-color" content="#3d35f5">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:title" content="Seus clientes marcam sozinhos. Você só atende.">
+  <meta property="og:description" content="Agenda online com link para a bio, sem conflito de horário, comissão e financeiro no celular.">
+  <meta property="og:image" content="og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preload" href="bricolage.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="app.css">
 </head>
 <body class="bg-page text-ink">
-  <header class="border-b border-line">
-    <div class="wrap flex h-16 items-center">
-      <a href="../index.html" class="flex items-center gap-2.5 font-display text-xl font-extrabold"><span class="grid h-9 w-9 place-items-center rounded-[.7rem] bg-brand text-brand-contrast"><i data-lucide="calendar-check-2" class="h-5 w-5"></i></span><span data-slot="produto">MinhaAgenda</span></a>
+  <a href="#conteudo" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 btn btn-primary">Pular para o conteúdo</a>
+
+  <!-- ===== CABEÇALHO ===== -->
+  <header class="sticky top-0 z-40 border-b border-white/10 bg-ink/90 text-page backdrop-blur-lg">
+    <div class="wrap flex h-16 items-center justify-between gap-3">
+      <a href="#" class="flex items-center gap-2.5 font-display text-xl font-extrabold tracking-tight" aria-label="Início">
+        <span class="grid h-9 w-9 place-items-center rounded-[.7rem] bg-brand text-brand-contrast"><i data-lucide="calendar-check-2" class="h-5 w-5"></i></span>
+        <span data-slot="produto">MinhaAgenda</span>
+      </a>
+      <nav class="hidden items-center gap-8 text-sm font-semibold text-page/70 md:flex" aria-label="Seções">
+        <a href="#demo" class="hover:text-page">Demonstração</a>
+        <a href="#recursos" class="hover:text-page">Recursos</a>
+        <a href="#calculadora" class="hover:text-page">Calculadora</a>
+        <a href="#planos" class="hover:text-page">Planos</a>
+      </nav>
+      <div class="flex items-center gap-2">
+        <a href="painel.html" class="btn btn-sm border border-white/25 text-page hover:bg-white/10">Entrar</a>
+        <a data-wa-vendas="Olá! Quero ver a agenda online funcionando no meu negócio." class="btn btn-primary btn-sm hidden sm:inline-flex">Quero para o meu negócio</a>
+      </div>
     </div>
   </header>
-  <main class="wrap max-w-3xl py-12 md:py-16">
-    <h1 class="text-4xl font-bold md:text-5xl">Política de privacidade</h1>
-    <p class="mt-3 text-sm text-muted">Última atualização: <span data-slot="data">novembro de 2026</span></p>
 
-    <div class="mt-10 grid gap-8 leading-relaxed [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-bold [&_ul]:mt-3 [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:pl-5 [&_p]:mt-3 [&_p]:text-ink/85">
-      <section>
-        <h2>Quem é responsável pelos seus dados</h2>
-        <p>Quando você agenda um horário, os seus dados são do <b>estabelecimento onde você agendou</b> (salão, barbearia, clínica etc.), que decide como usá-los para te atender. A <span data-slot="produto">MinhaAgenda</span> fornece o sistema e guarda esses dados em nome do estabelecimento, seguindo esta política.</p>
-      </section>
+  <main id="conteudo">
+    <!-- ===== HERO: a agenda que se enche sozinha ===== -->
+    <section class="pontilhado relative overflow-hidden bg-ink text-page">
+      <div aria-hidden="true" class="pointer-events-none absolute -right-40 -top-40 h-[34rem] w-[34rem] rounded-full bg-brand/60 blur-3xl"></div>
+      <div aria-hidden="true" class="pointer-events-none absolute -left-32 top-80 h-80 w-80 rounded-full bg-blush/25 blur-3xl"></div>
+      <div class="wrap relative grid items-center gap-12 pb-16 pt-10 md:pt-16 lg:grid-cols-[1.1fr_.9fr] lg:pb-24">
+        <div>
+          <p class="tag !bg-white/10 !text-blush"><i data-lucide="sparkles" class="h-3.5 w-3.5"></i>Para beleza, estética e bem-estar</p>
+          <h1 class="mt-5 font-display text-[2.6rem] font-extrabold leading-[.98] sm:text-6xl lg:text-7xl">Seus clientes marcam sozinhos. Você só atende.</h1>
+          <p class="mt-6 max-w-xl text-lg text-page/75">Uma página de agendamento com o seu link, agenda sem conflito de horário, comissão da equipe e financeiro no celular. Tudo pronto para o seu tipo de negócio.</p>
+          <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+            <a href="#demo" class="btn btn-primary !min-h-[3.25rem] !px-6 !text-base"><i data-lucide="smartphone" class="h-5 w-5"></i>Testar a demonstração</a>
+            <a data-wa-vendas="Olá! Vi o anúncio e quero saber mais sobre a agenda online." class="btn btn-wa !min-h-[3.25rem] !px-6 !text-base"><i data-lucide="message-circle" class="h-5 w-5"></i>Falar no WhatsApp</a>
+          </div>
+          <ul class="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-page/75">
+            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-mint"></i>Sem aplicativo para o cliente</li>
+            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-mint"></i>No ar no mesmo dia</li>
+            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-mint"></i>Sem fidelidade</li>
+          </ul>
+        </div>
 
-      <section>
-        <h2>Quais dados coletamos e por quê</h2>
-        <ul>
-          <li><b>Nome e WhatsApp:</b> para reservar o horário, confirmar e lembrar você do atendimento.</li>
-          <li><b>Serviços, profissional, data, hora e observação:</b> para o estabelecimento saber o que fazer e quando.</li>
-          <li><b>Valor e forma de pagamento</b> (registrados pelo estabelecimento): para o controle financeiro dele.</li>
-          <li><b>Um código gerado a partir da sua rede de internet</b>, que não permite descobrir o seu endereço IP: só para bloquear reservas em massa feitas por robôs.</li>
-          <li><b>Para quem usa o painel:</b> e-mail e senha de acesso. A senha é guardada de forma criptografada e ninguém consegue vê-la.</li>
-        </ul>
-        <p>Não usamos cookies de rastreamento nem de anúncios. Se você marcar "Lembrar meus dados neste aparelho", seu nome e WhatsApp ficam salvos só no seu próprio navegador, e você pode apagar quando quiser.</p>
-      </section>
+        <!-- Agenda viva (animação única ao carregar) -->
+        <div class="relative mx-auto w-full max-w-md text-ink" aria-label="Exemplo de agenda do dia sendo preenchida">
+          <div class="panel overflow-hidden shadow-[0_40px_80px_-20px_rgb(0_0_0/.55)]">
+            <div class="flex items-center justify-between border-b border-line px-5 py-4">
+              <div>
+                <p class="font-display text-lg font-bold">Agenda de hoje</p>
+                <p class="text-xs font-semibold text-muted">Studio Bella · 3 profissionais</p>
+              </div>
+              <span class="flex items-center gap-2 rounded-full bg-mint/70 px-3 py-1 text-xs font-bold text-ok"><span class="h-2 w-2 rounded-full bg-ok [animation:pulso_1.6s_infinite]"></span>Recebendo</span>
+            </div>
+            <ol class="divide-y divide-line" data-slot="agenda-viva"></ol>
+            <div class="flex items-center justify-between bg-sunken px-5 py-3 text-sm">
+              <span class="font-semibold text-muted">Previsto hoje</span>
+              <span class="font-display text-lg font-bold" data-slot="agenda-total">R$ 0</span>
+            </div>
+          </div>
+          <div data-slot="notificacao" class="absolute -top-5 left-4 right-4 flex items-center gap-3 rounded-2xl bg-ink px-4 py-3 text-page opacity-0 shadow-2xl transition duration-500 sm:-left-8 sm:right-auto sm:w-72" role="status">
+            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#1fae54] text-white"><i data-lucide="bell-ring" class="h-4 w-4"></i></span>
+            <span class="min-w-0 text-sm"><b class="block">Novo agendamento pelo link</b><span class="block truncate opacity-75" data-slot="notificacao-texto"></span></span>
+          </div>
+        </div>
+      </div>
+    </section>
 
-      <section>
-        <h2>Com quem os dados são compartilhados</h2>
-        <p>Somente com o estabelecimento onde você agendou e com os serviços técnicos que mantêm o sistema funcionando (hospedagem e banco de dados). Não vendemos nem cedemos seus dados para ninguém.</p>
-      </section>
-
-      <section>
-        <h2>Por quanto tempo guardamos</h2>
-        <p>Enquanto o estabelecimento usar o sistema, para manter o seu histórico de atendimentos. Se o estabelecimento deixar de usar o sistema, os dados são apagados. Você pode pedir a exclusão antes disso.</p>
-      </section>
-
-      <section>
-        <h2>Seus direitos</h2>
-        <p>Pela Lei Geral de Proteção de Dados (LGPD), você pode pedir para ver, corrigir ou apagar seus dados, além de saber com quem eles foram compartilhados. Fale direto com o estabelecimento onde agendou ou escreva para <a data-slot-href="email" class="font-semibold text-brand underline" data-slot="email"></a>.</p>
-      </section>
-
-      <section>
-        <h2>Segurança</h2>
-        <p>A conexão é sempre criptografada (HTTPS). Cada estabelecimento só acessa os próprios dados, e cada profissional da equipe só vê os próprios atendimentos.</p>
-      </section>
-
-      <p class="rounded-2xl bg-sunken p-4 text-sm text-muted">Este texto é um modelo. Antes de vender em escala, peça para um advogado revisar e ajustar à sua realidade.</p>
+    <!-- Faixa de nichos -->
+    <div class="border-y border-line bg-surface">
+      <div class="wrap flex gap-3 overflow-x-auto no-scrollbar py-4 text-sm font-semibold text-muted" data-slot="faixa-nichos"></div>
     </div>
-  </main>
-  <footer class="wrap py-10 text-sm text-muted"><a href="../index.html" class="underline">Voltar para o início</a></footer>
 
-  <script src="../assets/vendor/icones.js"></script>
-  <script src="../assets/config.js"></script>
-  <script src="../assets/privacidade.js"></script>
+    <!-- ===== DEMONSTRAÇÃO INTERATIVA ===== -->
+    <div class="pontilhado-claro bg-gradient-to-b from-accent/70 via-accent/30 to-page">
+    <section id="demo" class="section scroll-mt-16">
+      <div class="grid items-center gap-12 lg:grid-cols-[1fr_auto]">
+        <div class="max-w-xl">
+          <h2 class="h2">Toque no seu tipo de negócio e veja a página do seu cliente.</h2>
+          <p class="lead">É a página que vai na bio do Instagram. Teste como cliente: escolha serviço, profissional e horário. Nada é gravado.</p>
+          <div class="mt-8 grid grid-cols-4 gap-3 sm:grid-cols-8 lg:grid-cols-4" role="radiogroup" aria-label="Tipo de negócio" data-slot="amostras"></div>
+          <div class="mt-8 card elevado p-5">
+            <p class="font-display text-xl font-bold" data-slot="demo-titulo"></p>
+            <p class="mt-1 text-sm text-muted" data-slot="demo-detalhe"></p>
+            <a data-slot="demo-link" target="_blank" rel="noopener" class="btn btn-soft btn-sm mt-4"><i data-lucide="maximize-2" class="h-4 w-4"></i>Abrir em tela cheia</a>
+          </div>
+        </div>
+        <div class="mx-auto">
+          <div class="relative h-[620px] w-[310px] rounded-[3rem] bg-ink p-[10px] shadow-[0_40px_80px_-30px_rgb(27_26_61/.55)]">
+            <div class="absolute left-1/2 top-[18px] z-10 h-6 w-24 -translate-x-1/2 rounded-full bg-ink"></div>
+            <div class="h-full w-full overflow-hidden rounded-[2.4rem] bg-white">
+              <iframe data-slot="demo-frame" title="Demonstração da página de agendamento" class="h-[833px] w-[390px] origin-top-left scale-[.743] border-0" loading="lazy"></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    </div>
+
+    <!-- ===== RECURSOS (bento com mini telas reais) ===== -->
+    <section id="recursos" class="bg-ink text-page">
+      <div class="section">
+        <h2 class="h2 max-w-3xl">Do link na bio até o fechamento da comissão.</h2>
+        <p class="mt-4 max-w-2xl text-lg text-page/70">O que acontece entre o cliente marcar e você pagar a equipe, em um lugar só.</p>
+
+        <div class="mt-12 grid gap-4 md:grid-cols-6">
+          <!-- Comissão interativa -->
+          <article class="rounded-panel bg-page p-6 text-ink md:col-span-3 md:row-span-2">
+            <i data-lucide="percent" class="h-6 w-6 text-brand"></i>
+            <h3 class="mt-4 text-2xl font-bold">Comissão calculada sozinha</h3>
+            <p class="mt-2 text-muted">Porcentagem por serviço, com exceção por profissional. Mexa para ver.</p>
+            <div class="mt-6 rounded-2xl bg-sunken p-5">
+              <label class="label">Preço do serviço
+                <div class="flex items-center gap-3"><span class="text-muted">R$</span><input type="number" class="input !min-h-[2.75rem]" min="0" step="1" value="35" data-calc-com="preco" aria-label="Preço do serviço em reais"></div>
+              </label>
+              <label class="label mt-4">Comissão do profissional: <span data-slot="com-pct">10%</span>
+                <input type="range" min="0" max="70" step="5" value="10" class="w-full accent-[rgb(var(--c-brand))]" data-calc-com="pct">
+              </label>
+              <div class="mt-5 flex items-end justify-between border-t border-line pt-4">
+                <span class="text-sm font-semibold text-muted">Profissional recebe</span>
+                <span class="font-display text-4xl font-extrabold text-brand" data-slot="com-valor">R$ 3,50</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Lembrete WhatsApp -->
+          <article class="rounded-panel bg-[#0f2a1d] p-6 md:col-span-3">
+            <div class="flex items-center gap-3"><i data-lucide="message-circle" class="h-6 w-6 text-[#5ee39a]"></i><h3 class="text-2xl font-bold">Lembrete com 1 toque</h3></div>
+            <div class="mt-5 max-w-sm rounded-2xl rounded-tl-sm bg-[#1d3b2c] p-4 text-sm leading-relaxed text-[#e6f5ec]">
+              Olá, Marina! Passando para lembrar do seu horário no Studio Bella: corte + escova, amanhã às 10:00 com Ana. Se precisar remarcar, é só responder.
+              <span class="mt-1 block text-right text-xs opacity-60">09:12 ✓✓</span>
+            </div>
+          </article>
+
+          <!-- Sem conflito -->
+          <article class="rounded-panel bg-[#2a2766] p-6 md:col-span-2">
+            <i data-lucide="shield-check" class="h-6 w-6 text-accent"></i>
+            <h3 class="mt-4 text-xl font-bold">Dois clientes no mesmo horário? Impossível.</h3>
+            <div class="mt-5 grid gap-2 text-sm">
+              <p class="rounded-xl bg-page/10 px-3 py-2"><b>10:30</b> Joana · reservado</p>
+              <p class="rounded-xl border border-dashed border-page/30 px-3 py-2 text-page/60 line-through decoration-page/40">10:30 Carla · já ocupado</p>
+            </div>
+          </article>
+
+          <!-- Login equipe -->
+          <article class="rounded-panel bg-[#2a2766] p-6 md:col-span-1">
+            <i data-lucide="key-round" class="h-6 w-6 text-accent"></i>
+            <h3 class="mt-4 text-xl font-bold">Login para cada um</h3>
+            <p class="mt-2 text-sm text-page/70">Cada profissional vê só a própria agenda e os próprios ganhos.</p>
+          </article>
+
+          <!-- Financeiro -->
+          <article class="rounded-panel bg-page p-6 text-ink md:col-span-4">
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+              <h3 class="text-2xl font-bold">Fechamento da semana pronto</h3>
+              <span class="text-xs font-semibold text-muted">Exemplo ilustrativo</span>
+            </div>
+            <div class="mt-6 grid gap-4 sm:grid-cols-3" data-slot="mini-fin"></div>
+          </article>
+
+          <!-- QR Code -->
+          <article class="rounded-panel bg-blush p-6 text-ink md:col-span-2">
+            <div class="flex items-start justify-between gap-4">
+              <div><h3 class="text-xl font-bold">QR Code no espelho</h3><p class="mt-2 text-sm text-ink/70">O cliente marca o próximo horário antes de sair da cadeira.</p></div>
+              <div class="w-24 shrink-0 rounded-xl bg-white p-1.5" data-slot="qr-demo" aria-label="QR Code de exemplo"></div>
+            </div>
+          </article>
+
+          <!-- Clientes sumidos -->
+          <article class="rounded-panel bg-mint p-6 text-ink md:col-span-3">
+            <i data-lucide="heart-handshake" class="h-6 w-6"></i>
+            <h3 class="mt-4 text-xl font-bold">Lista de quem sumiu</h3>
+            <p class="mt-2 text-sm text-ink/70">Veja quem não volta há mais de 45 dias e mande uma mensagem de retorno.</p>
+            <div class="mt-4 flex items-center justify-between rounded-xl bg-white/70 px-4 py-3 text-sm"><span><b>Paula R.</b> · última visita há 52 dias</span><span class="font-bold text-[#178a52]">Chamar</span></div>
+          </article>
+
+          <!-- Folgas / portfólio -->
+          <article class="rounded-panel bg-page p-6 text-ink md:col-span-3">
+            <i data-lucide="images" class="h-6 w-6 text-brand"></i>
+            <h3 class="mt-4 text-xl font-bold">Portfólio, folgas e feriados</h3>
+            <p class="mt-2 text-sm text-muted">Fotos dos trabalhos enviadas pelo celular e dias bloqueados que somem da agenda na hora.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CALCULADORA ===== -->
+    <section id="calculadora" class="section scroll-mt-16">
+      <div class="grid gap-10 lg:grid-cols-2">
+        <div>
+          <h2 class="h2">Quanto custa marcar horário na mão?</h2>
+          <p class="lead">Coloque os números do seu negócio. A conta é sua, não uma promessa nossa.</p>
+          <form class="mt-8 grid gap-6" data-slot="calc" aria-label="Calculadora">
+            <label class="label">Agendamentos por semana: <span data-out="ag"></span><input type="range" name="ag" min="5" max="300" step="5" value="60" class="w-full accent-[rgb(var(--c-brand))]"></label>
+            <label class="label">Minutos de conversa para marcar cada um: <span data-out="min"></span><input type="range" name="min" min="1" max="15" value="4" class="w-full accent-[rgb(var(--c-brand))]"></label>
+            <label class="label">Faltas sem aviso por semana: <span data-out="faltas"></span><input type="range" name="faltas" min="0" max="30" value="4" class="w-full accent-[rgb(var(--c-brand))]"></label>
+            <label class="label">Valor médio de um atendimento: <span data-out="ticket"></span><input type="range" name="ticket" min="15" max="400" step="5" value="60" class="w-full accent-[rgb(var(--c-brand))]"></label>
+            <label class="label">Quantas dessas faltas você acha que um lembrete evitaria: <span data-out="evita"></span><input type="range" name="evita" min="0" max="80" step="5" value="30" class="w-full accent-[rgb(var(--c-brand))]"></label>
+          </form>
+        </div>
+        <div class="lg:pt-16">
+          <div class="panel elevado sticky top-24 overflow-hidden">
+            <div class="bg-brand p-7 text-brand-contrast">
+              <p class="text-sm font-semibold opacity-80">Por mês, você gasta no WhatsApp</p>
+              <p class="mt-1 font-display text-6xl font-extrabold" data-slot="calc-horas">0 h</p>
+              <p class="mt-1 text-sm opacity-80">respondendo "tem horário?"</p>
+            </div>
+            <div class="grid gap-px bg-line sm:grid-cols-2">
+              <div class="bg-surface p-6"><p class="text-sm font-semibold text-muted">Perdido com faltas</p><p class="mt-1 font-display text-3xl font-bold text-bad" data-slot="calc-perdido">R$ 0</p></div>
+              <div class="bg-surface p-6"><p class="text-sm font-semibold text-muted">Que o lembrete pode recuperar</p><p class="mt-1 font-display text-3xl font-bold text-ok" data-slot="calc-recupera">R$ 0</p></div>
+            </div>
+            <div class="p-6"><a data-wa-vendas="Olá! Fiz a conta na calculadora e quero organizar minha agenda." class="btn btn-primary w-full">Quero parar de perder horário</a></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== COMO COMEÇA (sequência real) ===== -->
+    <section class="bg-blush/45">
+      <div class="section">
+        <h2 class="h2 max-w-2xl">No ar no mesmo dia, sem você mexer em nada técnico.</h2>
+        <ol class="mt-12 grid gap-8 md:grid-cols-3">
+          <li class="relative pl-14">
+            <span class="absolute left-0 top-0 grid h-10 w-10 place-items-center rounded-full bg-brand font-display text-lg font-bold text-brand-contrast">1</span>
+            <h3 class="text-xl font-bold">A gente cadastra tudo</h3>
+            <p class="mt-2 text-muted">Serviços, preços, equipe, horários, comissões e as cores do seu negócio.</p>
+          </li>
+          <li class="relative pl-14">
+            <span class="absolute left-0 top-0 grid h-10 w-10 place-items-center rounded-full bg-brand font-display text-lg font-bold text-brand-contrast">2</span>
+            <h3 class="text-xl font-bold">Você divulga o link</h3>
+            <p class="mt-2 text-muted">Na bio do Instagram, na resposta automática do WhatsApp e num QR Code no balcão.</p>
+          </li>
+          <li class="relative pl-14">
+            <span class="absolute left-0 top-0 grid h-10 w-10 place-items-center rounded-full bg-brand font-display text-lg font-bold text-brand-contrast">3</span>
+            <h3 class="text-xl font-bold">Os horários chegam sozinhos</h3>
+            <p class="mt-2 text-muted">Abra o painel no celular e veja quem vem hoje, quanto entra e quanto cada um ganha.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ===== PLANOS ===== -->
+    <section id="planos" class="section scroll-mt-16">
+      <h2 class="h2">Planos simples, sem fidelidade.</h2>
+      <p class="lead">Comece pelo que faz sentido hoje e mude quando a equipe crescer.</p>
+      <div class="mt-10 grid items-stretch gap-4 md:grid-cols-3" data-slot="planos"></div>
+    </section>
+
+    <!-- ===== DÚVIDAS ===== -->
+    <section id="faq" class="bg-surface border-y border-line scroll-mt-16">
+      <div class="section grid gap-10 lg:grid-cols-[.8fr_1.2fr]">
+        <div>
+          <h2 class="h2">Perguntas de quem já está pensando em usar.</h2>
+          <a data-wa-vendas="Olá! Tenho uma dúvida sobre a agenda online." class="btn btn-ghost mt-6"><i data-lucide="message-circle" class="h-4 w-4"></i>Perguntar no WhatsApp</a>
+        </div>
+        <div class="grid gap-3" data-slot="faq"></div>
+      </div>
+    </section>
+
+    <!-- ===== CTA FINAL ===== -->
+    <section class="section">
+      <div class="relative overflow-hidden rounded-[2rem] bg-brand px-6 py-14 text-brand-contrast md:px-14 md:py-20">
+        <div aria-hidden="true" class="absolute -bottom-24 -right-16 h-72 w-72 rounded-full bg-blush/40 blur-2xl"></div>
+        <h2 class="relative max-w-3xl font-display text-4xl font-extrabold leading-[1] md:text-6xl">Amanhã de manhã, a agenda já pode estar marcando sozinha.</h2>
+        <a data-wa-vendas="Olá! Quero começar com a agenda online." class="relative mt-10 btn !min-h-[3.25rem] bg-page !px-7 !text-base text-ink hover:bg-white"><i data-lucide="message-circle" class="h-5 w-5"></i>Começar pelo WhatsApp</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-line">
+    <div class="wrap flex flex-col justify-between gap-4 py-10 text-sm text-muted md:flex-row">
+      <p>© <span data-slot="ano"></span> <span data-slot="produto">MinhaAgenda</span>. <span data-slot="cidade"></span></p>
+      <nav class="flex flex-wrap gap-x-6 gap-y-2" aria-label="Rodapé">
+        <a href="painel.html" class="hover:text-ink">Área do cliente</a>
+        <a href="privacidade.html" class="hover:text-ink">Privacidade</a>
+        <a data-slot-href="email" data-slot="email" class="hover:text-ink"></a>
+      </nav>
+    </div>
+  </footer>
+
+  <!-- Barra fixa no celular (aparece depois do topo) -->
+  <div data-slot="barra-fixa" class="safe-bottom fixed inset-x-0 bottom-0 z-40 grid translate-y-full grid-cols-2 gap-2 border-t border-line bg-page/95 px-3 pt-3 backdrop-blur transition-transform duration-300 md:hidden">
+    <a href="#demo" class="btn btn-ghost">Ver demo</a>
+    <a data-wa-vendas="Olá! Vi o anúncio e quero saber mais sobre a agenda online." class="btn btn-wa"><i data-lucide="message-circle" class="h-4 w-4"></i>WhatsApp</a>
+  </div>
+
+  <script src="icones.js"></script>
+  <script src="qrcode.js"></script>
+  <script src="config.js"></script>
+  <script src="nichos.js"></script>
+  <script src="comum.js"></script>
+  <script src="vendas.js"></script>
 </body>
 </html>
