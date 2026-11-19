@@ -22,20 +22,20 @@
   <a href="#conteudo" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 btn btn-primary">Pular para o conteúdo</a>
 
   <!-- ===== CABEÇALHO ===== -->
-  <header class="sticky top-0 z-40 border-b border-line/70 bg-page/80 backdrop-blur-lg">
+  <header class="sticky top-0 z-40 border-b border-white/10 bg-ink/90 text-page backdrop-blur-lg">
     <div class="wrap flex h-16 items-center justify-between gap-3">
       <a href="#" class="flex items-center gap-2.5 font-display text-xl font-extrabold tracking-tight" aria-label="Início">
         <span class="grid h-9 w-9 place-items-center rounded-[.7rem] bg-brand text-brand-contrast"><i data-lucide="calendar-check-2" class="h-5 w-5"></i></span>
         <span data-slot="produto">MinhaAgenda</span>
       </a>
-      <nav class="hidden items-center gap-8 text-sm font-semibold text-muted md:flex" aria-label="Seções">
-        <a href="#demo" class="hover:text-ink">Demonstração</a>
-        <a href="#recursos" class="hover:text-ink">Recursos</a>
-        <a href="#calculadora" class="hover:text-ink">Calculadora</a>
-        <a href="#planos" class="hover:text-ink">Planos</a>
+      <nav class="hidden items-center gap-8 text-sm font-semibold text-page/70 md:flex" aria-label="Seções">
+        <a href="#demo" class="hover:text-page">Demonstração</a>
+        <a href="#recursos" class="hover:text-page">Recursos</a>
+        <a href="#calculadora" class="hover:text-page">Calculadora</a>
+        <a href="#planos" class="hover:text-page">Planos</a>
       </nav>
       <div class="flex items-center gap-2">
-        <a href="painel/" class="btn btn-ghost btn-sm">Entrar</a>
+        <a href="painel/index.html" class="btn btn-sm border border-white/25 text-page hover:bg-white/10">Entrar</a>
         <a data-wa-vendas="Olá! Quero ver a agenda online funcionando no meu negócio." class="btn btn-primary btn-sm hidden sm:inline-flex">Quero para o meu negócio</a>
       </div>
     </div>
@@ -43,28 +43,28 @@
 
   <main id="conteudo">
     <!-- ===== HERO: a agenda que se enche sozinha ===== -->
-    <section class="relative overflow-hidden">
-      <div aria-hidden="true" class="pointer-events-none absolute -right-40 -top-40 h-[34rem] w-[34rem] rounded-full bg-accent blur-3xl opacity-70"></div>
-      <div aria-hidden="true" class="pointer-events-none absolute -left-32 top-64 h-72 w-72 rounded-full bg-blush/60 blur-3xl"></div>
+    <section class="pontilhado relative overflow-hidden bg-ink text-page">
+      <div aria-hidden="true" class="pointer-events-none absolute -right-40 -top-40 h-[34rem] w-[34rem] rounded-full bg-brand/60 blur-3xl"></div>
+      <div aria-hidden="true" class="pointer-events-none absolute -left-32 top-80 h-80 w-80 rounded-full bg-blush/25 blur-3xl"></div>
       <div class="wrap relative grid items-center gap-12 pb-16 pt-10 md:pt-16 lg:grid-cols-[1.1fr_.9fr] lg:pb-24">
         <div>
-          <p class="tag"><i data-lucide="sparkles" class="h-3.5 w-3.5"></i>Para beleza, estética e bem-estar</p>
+          <p class="tag !bg-white/10 !text-blush"><i data-lucide="sparkles" class="h-3.5 w-3.5"></i>Para beleza, estética e bem-estar</p>
           <h1 class="mt-5 font-display text-[2.6rem] font-extrabold leading-[.98] sm:text-6xl lg:text-7xl">Seus clientes marcam sozinhos. Você só atende.</h1>
-          <p class="mt-6 max-w-xl text-lg text-muted">Uma página de agendamento com o seu link, agenda sem conflito de horário, comissão da equipe e financeiro no celular. Tudo pronto para o seu tipo de negócio.</p>
+          <p class="mt-6 max-w-xl text-lg text-page/75">Uma página de agendamento com o seu link, agenda sem conflito de horário, comissão da equipe e financeiro no celular. Tudo pronto para o seu tipo de negócio.</p>
           <div class="mt-8 flex flex-col gap-3 sm:flex-row">
             <a href="#demo" class="btn btn-primary !min-h-[3.25rem] !px-6 !text-base"><i data-lucide="smartphone" class="h-5 w-5"></i>Testar a demonstração</a>
-            <a data-wa-vendas="Olá! Vi o anúncio e quero saber mais sobre a agenda online." class="btn btn-ghost !min-h-[3.25rem] !px-6 !text-base"><i data-lucide="message-circle" class="h-5 w-5"></i>Falar no WhatsApp</a>
+            <a data-wa-vendas="Olá! Vi o anúncio e quero saber mais sobre a agenda online." class="btn btn-wa !min-h-[3.25rem] !px-6 !text-base"><i data-lucide="message-circle" class="h-5 w-5"></i>Falar no WhatsApp</a>
           </div>
-          <ul class="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-muted">
-            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-ok"></i>Sem aplicativo para o cliente</li>
-            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-ok"></i>No ar no mesmo dia</li>
-            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-ok"></i>Sem fidelidade</li>
+          <ul class="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-page/75">
+            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-mint"></i>Sem aplicativo para o cliente</li>
+            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-mint"></i>No ar no mesmo dia</li>
+            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-mint"></i>Sem fidelidade</li>
           </ul>
         </div>
 
         <!-- Agenda viva (animação única ao carregar) -->
-        <div class="relative mx-auto w-full max-w-md" aria-label="Exemplo de agenda do dia sendo preenchida">
-          <div class="panel elevado overflow-hidden">
+        <div class="relative mx-auto w-full max-w-md text-ink" aria-label="Exemplo de agenda do dia sendo preenchida">
+          <div class="panel overflow-hidden shadow-[0_40px_80px_-20px_rgb(0_0_0/.55)]">
             <div class="flex items-center justify-between border-b border-line px-5 py-4">
               <div>
                 <p class="font-display text-lg font-bold">Agenda de hoje</p>
@@ -92,13 +92,14 @@
     </div>
 
     <!-- ===== DEMONSTRAÇÃO INTERATIVA ===== -->
+    <div class="pontilhado-claro bg-gradient-to-b from-accent/70 via-accent/30 to-page">
     <section id="demo" class="section scroll-mt-16">
       <div class="grid items-center gap-12 lg:grid-cols-[1fr_auto]">
         <div class="max-w-xl">
           <h2 class="h2">Toque no seu tipo de negócio e veja a página do seu cliente.</h2>
           <p class="lead">É a página que vai na bio do Instagram. Teste como cliente: escolha serviço, profissional e horário. Nada é gravado.</p>
           <div class="mt-8 grid grid-cols-4 gap-3 sm:grid-cols-8 lg:grid-cols-4" role="radiogroup" aria-label="Tipo de negócio" data-slot="amostras"></div>
-          <div class="mt-8 card-sunken p-5">
+          <div class="mt-8 card elevado p-5">
             <p class="font-display text-xl font-bold" data-slot="demo-titulo"></p>
             <p class="mt-1 text-sm text-muted" data-slot="demo-detalhe"></p>
             <a data-slot="demo-link" target="_blank" rel="noopener" class="btn btn-soft btn-sm mt-4"><i data-lucide="maximize-2" class="h-4 w-4"></i>Abrir em tela cheia</a>
@@ -114,6 +115,8 @@
         </div>
       </div>
     </section>
+
+    </div>
 
     <!-- ===== RECURSOS (bento com mini telas reais) ===== -->
     <section id="recursos" class="bg-ink text-page">
@@ -234,7 +237,7 @@
     </section>
 
     <!-- ===== COMO COMEÇA (sequência real) ===== -->
-    <section class="bg-surface border-y border-line">
+    <section class="bg-blush/45">
       <div class="section">
         <h2 class="h2 max-w-2xl">No ar no mesmo dia, sem você mexer em nada técnico.</h2>
         <ol class="mt-12 grid gap-8 md:grid-cols-3">
@@ -289,8 +292,8 @@
     <div class="wrap flex flex-col justify-between gap-4 py-10 text-sm text-muted md:flex-row">
       <p>© <span data-slot="ano"></span> <span data-slot="produto">MinhaAgenda</span>. <span data-slot="cidade"></span></p>
       <nav class="flex flex-wrap gap-x-6 gap-y-2" aria-label="Rodapé">
-        <a href="painel/" class="hover:text-ink">Área do cliente</a>
-        <a href="privacidade/" class="hover:text-ink">Privacidade</a>
+        <a href="painel/index.html" class="hover:text-ink">Área do cliente</a>
+        <a href="privacidade/index.html" class="hover:text-ink">Privacidade</a>
         <a data-slot-href="email" data-slot="email" class="hover:text-ink"></a>
       </nav>
     </div>

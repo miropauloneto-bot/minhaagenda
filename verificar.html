@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
+<title>Verificar arquivos do site</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:760px;margin:0 auto;padding:24px;color:#1b1a3d;background:#fafafd}
+h1{font-size:28px;margin:0 0 4px}.ok{color:#168759}.falta{color:#cd2b31;font-weight:700}
+li{padding:4px 0;font-family:ui-monospace,monospace;font-size:14px}.res{padding:16px;border-radius:14px;margin:16px 0;font-size:17px}
+.bom{background:#bdefd9}.ruim{background:#ffd9d9}
+</style>
+</head>
+<body>
+<h1>Verificar arquivos do site</h1>
+<p>Esta página confere se todos os arquivos necessários foram enviados. Abra pelo endereço publicado (não pelo computador).</p>
+<div id="res" class="res">Conferindo…</div>
+<ul id="lista"></ul>
+<script>
+/* Página de diagnóstico: não usa dados de ninguém. */
+const ARQUIVOS = ["agendar/index.html", "assets/agendar.js", "assets/app.css", "assets/comum.js", "assets/config.js", "assets/favicon.svg", "assets/fonts/bricolage.woff2", "assets/fonts/fraunces.woff2", "assets/fonts/manrope.woff2", "assets/fonts/oswald.woff2", "assets/nichos.js", "assets/og-image.png", "assets/painel.js", "assets/privacidade.js", "assets/tema-escuro.js", "assets/vendas.js", "assets/vendor/LICENSE-supabase-js.txt", "assets/vendor/icones.js", "assets/vendor/qrcode.js", "assets/vendor/supabase.js", "index.html", "painel/index.html", "privacidade/index.html"];
+(async () => {
+  const faltando = [];
+  const ul = document.getElementById('lista');
+  for (const f of ARQUIVOS) {
+    let ok = false;
+    try { const r = await fetch(f + '?v=' + Date.now(), { method: 'GET', cache: 'no-store' }); ok = r.ok; } catch (e) { ok = false; }
+    if (!ok) faltando.push(f);
+    const li = document.createElement('li');
+    li.className = ok ? 'ok' : 'falta';
+    li.textContent = (ok ? '✓ ' : '✗ FALTANDO: ') + f;
+    ul.appendChild(li);
+  }
+  const res = document.getElementById('res');
+  if (location.protocol === 'file:') { res.className = 'res ruim'; res.textContent = 'Abra esta página pelo endereço do site (https://...), não pelo arquivo no computador.'; return; }
+  res.className = 'res ' + (faltando.length ? 'ruim' : 'bom');
+  res.textContent = faltando.length ? faltando.length + ' arquivo(s) faltando. Envie para o GitHub exatamente nas pastas indicadas abaixo.' : 'Tudo certo! Todos os ' + ARQUIVOS.length + ' arquivos estão no ar.';
+  ul.prepend(...[...ul.children].filter((li) => li.classList.contains('falta')));
+})();
+</script>
+</body>
+</html>

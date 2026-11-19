@@ -14,6 +14,7 @@ module.exports = {
         ink: 'rgb(var(--c-text) / <alpha-value>)',
         muted: 'rgb(var(--c-muted) / <alpha-value>)',
         line: 'rgb(var(--c-line) / <alpha-value>)',
+        nav: 'rgb(var(--c-nav) / <alpha-value>)',
         blush: 'rgb(var(--c-blush) / <alpha-value>)',
         mint: 'rgb(var(--c-mint) / <alpha-value>)',
         ok: 'rgb(var(--c-ok) / <alpha-value>)',

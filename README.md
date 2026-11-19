@@ -46,11 +46,17 @@ Sistema completo para salões, barbearias, esmalterias, clínicas de estética, 
 ## Atualizar da versão 2 para a 3 (nenhum dado é perdido)
 
 1. **Banco:** Supabase → **SQL Editor** → *New query* → cole **todo** o `supabase/schema.sql` → **Run** → confirme o aviso. Deve aparecer *Success*.
-2. **Supabase → Authentication → Sign In / Providers → Email** (ou *Policies*): procure *Minimum password length* e coloque **8**.
-3. **Site:** no GitHub, **apague os arquivos antigos que não existem mais**: `assets/base.css` e `assets/tailwind-tema.js`. Depois envie **todo o conteúdo** da pasta nova por cima (**Add file → Upload files**), incluindo as pastas novas `assets/vendor`, `assets/fonts`, `privacidade`, `deploy`, `scripts` e `src`.
-   - O `assets/config.js` já vem com a sua URL e a sua chave do Supabase.
-   - **Não envie** a pasta `node_modules` se ela existir no seu computador.
-4. Espere a publicação (1 a 3 minutos) e abra o painel com **Ctrl+F5**.
+2. **Senha mínima:** Supabase → **Authentication → Sign In / Providers → Email** → *Minimum password length* = **8**.
+3. **Site:** use o **GitHub Desktop**, que envia todas as pastas sem pular nenhuma (o envio pelo navegador costuma esquecer pastas dentro de pastas):
+   1. Instale em **desktop.github.com** e entre com sua conta.
+   2. **File → Clone repository** → escolha `minhaagenda` → **Clone**.
+   3. **Repository → Show in Explorer**. Apague **tudo o que aparece** na pasta. A pasta oculta `.git` não aparece e não deve ser apagada.
+   4. Copie para dentro dela **todo o conteúdo** da pasta `minhaagenda` do zip.
+   5. De volta ao GitHub Desktop: em *Summary* escreva `Versão 3` → **Commit to main** → **Push origin**.
+4. Espere 1 a 3 minutos e abra **`https://SEU-USUARIO.github.io/minhaagenda/verificar.html`**. Ela confere arquivo por arquivo e precisa mostrar **"Tudo certo!"**.
+5. Abra o site e o painel com **Ctrl+F5**.
+
+> **Não teste com duplo clique no `index.html`.** Aberto direto do computador, o navegador bloqueia fontes e conexões. Teste pelo endereço publicado, ou no VS Code com a extensão **Live Server**.
 
 ---
 
