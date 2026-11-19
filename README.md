@@ -4,105 +4,182 @@ Sistema completo para salões, barbearias, esmalterias, clínicas de estética, 
 
 | Página | Endereço | Para quem |
 |---|---|---|
-| Página de vendas | `/` | Você mostrar o produto e captar clientes |
-| Demonstrações | `/agendar/?demo=barbearia` | Mostrar nas visitas (funciona sem banco) |
+| Página de vendas | `/` | Seus anúncios e visitas |
+| Demonstrações | `/agendar/?demo=barbearia` | Mostrar sem banco de dados |
 | Página do negócio | `/agendar/?n=nome-do-negocio` | O cliente final agendar |
-| Painel do dono | `/painel/` | O dono gerenciar agenda, serviços, equipe etc. |
-
-> **Já instalou a versão anterior?** Veja [Atualizar para a versão 2](#atualizar-para-a-versão-2) no fim deste guia.
-
-**Custo: R$ 0.** O site fica no **GitHub Pages** e o banco de dados no **Supabase**, ambos no plano gratuito.
+| Painel | `/painel/` | Dono e profissionais |
+| Privacidade | `/privacidade/` | Exigida por lei e pelos anúncios do Instagram/Facebook |
 
 ---
 
-## Por que GitHub Pages e não Streamlit
+## Novidades da versão 3
 
-O Streamlit Community Cloud é ótimo para painéis em Python, mas não para isto:
-
-- **O app "dorme"** quando ninguém acessa e leva um tempo para acordar. A cliente do salão abriria o link da bio e veria uma tela de "acordando o app". Ela desiste.
-- O link fica feio (`xxx.streamlit.app`) e a página fica dentro de uma moldura do Streamlit, sem controle total do visual no celular.
-
-O GitHub Pages serve as páginas na hora, 24 horas, direto do seu repositório. E você continua com tudo no GitHub, como queria.
-
----
-
-## Passo 1 — Criar o banco no Supabase (10 minutos)
-
-1. Acesse **supabase.com** → *Start your project* → entre com sua conta do GitHub.
-2. *New project*:
-   - **Name:** `minhaagenda`
-   - **Database password:** gere uma e **guarde** (não vai no código).
-   - **Region:** *South America (São Paulo)*.
-3. Quando o projeto terminar de criar, vá em **SQL Editor** → *New query*.
-4. Abra o arquivo `supabase/schema.sql`, copie **tudo**, cole e clique **Run**. Deve aparecer *Success*.
-   (Pode rodar de novo no futuro sem perder dados.)
-5. **Authentication → Sign In / Providers → Email:** desligue **Confirm email** e salve.
-   Assim o dono cria a conta e já entra. O envio de e-mails do plano grátis é bem limitado por hora, então é melhor não depender dele.
-6. **Project Settings → API Keys** (ou botão **Connect**): copie
-   - **Project URL**, algo como `https://abcdxyz.supabase.co`
-   - **Publishable key** (`sb_publishable_...`) ou a **anon public key** (a que começa com `eyJ...`)
-
-   > ⚠️ **Nunca** copie a *secret key* / *service_role*. Essa dá acesso total e não pode ir para o GitHub.
-
-7. Abra `assets/config.js` e cole os dois valores em `supabaseUrl` e `supabaseKey`.
-   Aproveite e coloque **seu** WhatsApp de vendas, o nome do produto e os preços dos planos.
-
-> A *publishable/anon key* é pública por natureza: a segurança vem das regras do banco (Row Level Security), que já estão no `schema.sql`. Cada dono só enxerga e altera os dados do próprio negócio, e os dados dos clientes finais não ficam visíveis para o público.
+**Visual novo e próprio.** Ultramar com rosa e menta, fontes Bricolage Grotesque e Manrope.
+- **Página de vendas:**
+  - agenda que se enche sozinha ao abrir;
+  - demonstração no celular que troca pelo tipo de negócio;
+  - mini-telas interativas, com comissão que se calcula ao mexer;
+  - calculadora "quanto custa marcar na mão";
+  - barra fixa de WhatsApp no celular;
+  - imagem de compartilhamento para redes sociais.
+- **Página de agendamento:**
+  - serviços por categoria;
+  - barra fixa com o resumo da escolha;
+  - "lembrar meus dados";
+  - salvar na agenda do celular (.ics) e no Google Agenda;
+  - botão de compartilhar;
+  - tabela de horários da semana;
+  - fotos do portfólio no topo.
+- **Painel:**
+  - menu lateral no computador e menu inferior no celular;
+  - modo escuro;
+  - tela **Início**: próximo cliente, números do dia e da semana, atalhos;
+  - aba **Clientes**: histórico, gasto total, faltas, filtro "sumidos há 45+ dias" com mensagem de retorno pronta.
+- **Segurança:** veja a seção [Segurança](#segurança).
+- **Pronto para VPS:** Docker + Caddy, com HTTPS automático e cabeçalhos de segurança.
+- **Mais rápido no celular:**
+  - nenhuma biblioteca vem de fora: Tailwind compilado, ícones só os usados (12 KB em vez de 350 KB) e fontes no próprio site;
+  - sem Google Fonts, o que também evita enviar dados de visitantes para terceiros.
 
 ---
 
-## Passo 2 — Publicar no GitHub Pages (5 minutos)
+## Atualizar da versão 2 para a 3 (nenhum dado é perdido)
 
-### Pelo VS Code (recomendado)
-
-1. Abra a pasta `minhaagenda` no VS Code.
-2. No terminal do VS Code:
-   ```bash
-   git init
-   git add .
-   git commit -m "Primeira versão"
-   ```
-3. Clique no ícone **Source Control** → *Publish to GitHub* → escolha **Public repository**.
-   (No plano grátis, o GitHub Pages só funciona com repositório **público**. Não há nenhuma senha no código, então tudo bem.)
-
-### Ou pelo navegador
-
-1. github.com → **New repository** → nome `minhaagenda` → **Public** → *Create*.
-2. *uploading an existing file* → arraste **o conteúdo** da pasta (index.html, assets, agendar, painel, supabase, README.md) → *Commit changes*.
-
-### Ativar o Pages
-
-1. No repositório: **Settings → Pages**.
-2. **Source:** *Deploy from a branch* · **Branch:** `main` · pasta `/ (root)` → *Save*.
-3. Em 1 a 2 minutos o site estará em:
-   `https://SEU-USUARIO.github.io/minhaagenda/`
-
-### Avisar o Supabase sobre o endereço
-
-**Authentication → URL Configuration:**
-- **Site URL:** `https://SEU-USUARIO.github.io/minhaagenda/painel/`
-- **Redirect URLs:** adicione `https://SEU-USUARIO.github.io/minhaagenda/painel/`
-
-Isso é usado no link de "Esqueci a senha".
+1. **Banco:** Supabase → **SQL Editor** → *New query* → cole **todo** o `supabase/schema.sql` → **Run** → confirme o aviso. Deve aparecer *Success*.
+2. **Supabase → Authentication → Sign In / Providers → Email** (ou *Policies*): procure *Minimum password length* e coloque **8**.
+3. **Site:** no GitHub, **apague os arquivos antigos que não existem mais**: `assets/base.css` e `assets/tailwind-tema.js`. Depois envie **todo o conteúdo** da pasta nova por cima (**Add file → Upload files**), incluindo as pastas novas `assets/vendor`, `assets/fonts`, `privacidade`, `deploy`, `scripts` e `src`.
+   - O `assets/config.js` já vem com a sua URL e a sua chave do Supabase.
+   - **Não envie** a pasta `node_modules` se ela existir no seu computador.
+4. Espere a publicação (1 a 3 minutos) e abra o painel com **Ctrl+F5**.
 
 ---
 
-## Passo 3 — Testar tudo
+## Instalar do zero
 
-1. Abra `https://SEU-USUARIO.github.io/minhaagenda/painel/` → **Criar conta**.
-2. Escolha o nicho, preencha nome e WhatsApp → **Criar minha página**.
-   Serviços, equipe e horários de exemplo já vêm cadastrados.
-3. Na aba **Divulgar**, clique em **Abrir** e faça um agendamento como se fosse cliente.
-4. Volte ao painel → **Agenda**: o agendamento está lá.
-5. Tente marcar o mesmo horário de novo com o mesmo profissional: o sistema não deixa.
+### 1. Banco no Supabase
+1. **supabase.com** → *New project* → região **South America (São Paulo)** → guarde a senha do banco.
+2. **SQL Editor** → cole `supabase/schema.sql` → **Run**.
+3. **Authentication → Sign In / Providers → Email:**
+   - desligue **Confirm email**;
+   - coloque o tamanho mínimo da senha em **8**.
+4. **Project Settings → API Keys:** copie a **Project URL** e a **Publishable key** para `assets/config.js`.
+   **Nunca** use a *secret key* / *service_role*.
 
-### Testar no seu computador antes de publicar
-
-Instale a extensão **Live Server** no VS Code → clique com o botão direito em `index.html` → *Open with Live Server*. Pode testar o painel e o agendamento normalmente, porque eles falam direto com o Supabase.
+### 2. Site no ar
+- **Para testar (grátis):** GitHub → repositório **público** → **Settings → Pages** → branch `main`, pasta `/ (root)`.
+- **Para clientes pagantes:** use a **VPS** (abaixo) ou o **Cloudflare Pages** ligado ao repositório. As regras do GitHub Pages não permitem uso como software comercial.
+- Em qualquer caso, no Supabase vá em **Authentication → URL Configuration** e coloque o endereço do painel (`https://seudominio.com.br/painel/`) em *Site URL* e em *Redirect URLs*.
 
 ---
 
-## Como gerenciar seus clientes (você, como fornecedor)
+## Subir numa VPS (Ubuntu 22.04 ou 24.04)
+
+Funciona em qualquer VPS com 1 GB de RAM (Hostinger, Contabo, DigitalOcean, Hetzner, Magalu Cloud…). O banco continua no Supabase, e a VPS só entrega o site.
+
+**1. Aponte o domínio para a VPS.** No registro.br (ou onde está o DNS), crie:
+- registro **A** de `@` com o IP da VPS;
+- registro **A** de `www` com o mesmo IP.
+
+**2. Prepare o servidor.** Entre por SSH e rode:
+```bash
+# atualizações automáticas de segurança e firewall
+sudo apt update && sudo apt -y upgrade
+sudo apt -y install unattended-upgrades git
+sudo ufw allow OpenSSH && sudo ufw allow 80 && sudo ufw allow 443 && sudo ufw --force enable
+
+# Docker
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER && newgrp docker
+```
+
+**3. Baixe o site e configure o domínio:**
+```bash
+git clone https://github.com/SEU-USUARIO/minhaagenda.git
+cd minhaagenda/deploy
+cp .env.exemplo .env
+nano .env        # troque para DOMINIO=seudominio.com.br
+docker compose up -d
+```
+
+Em 1 a 2 minutos, `https://seudominio.com.br` está no ar. O certificado HTTPS é emitido e renovado sozinho, e `www` redireciona para o domínio principal.
+
+**Para atualizar depois** (depois de enviar as mudanças ao GitHub):
+```bash
+cd ~/minhaagenda && ./deploy/atualizar.sh
+```
+
+**Boas práticas na VPS:**
+- entre com chave SSH e desligue o login por senha (`PasswordAuthentication no` em `/etc/ssh/sshd_config`);
+- não use o usuário `root` no dia a dia;
+- ative os backups da própria VPS no painel do provedor.
+
+> Se um dia você usar um **domínio próprio no Supabase** (em vez de `xxxx.supabase.co`), acrescente esse endereço em `connect-src` e `img-src` no `deploy/Caddyfile` e na linha `Content-Security-Policy` do topo de cada `index.html`.
+
+---
+
+## Editar o visual
+
+As páginas usam `assets/app.css`, que é **gerado** a partir de `src/app.css`.
+
+- **Mudou só textos ou dados** (`config.js`, `nichos.js`, textos dos HTML)? Não precisa fazer nada.
+- **Mudou classes de estilo ou cores?** No VS Code, com o [Node.js](https://nodejs.org) instalado, rode:
+```bash
+npm install      # só na primeira vez
+npm run build    # gera assets/app.css e assets/vendor/icones.js
+```
+- Usou um **ícone novo** do [Lucide](https://lucide.dev/icons)? Rode `npm run build` também: só os ícones usados entram no site.
+- **Cores da sua marca:** variáveis `--c-*` no início de `src/app.css`.
+- **Cores dos negócios:** `assets/nichos.js`, ou a cor escolhida pelo dono no painel.
+
+---
+
+## Segurança
+
+**O que o sistema faz:**
+- **Cada dono só vê os dados dele.** Cada profissional só vê a própria agenda e os próprios clientes. Isso é garantido pelas regras do banco (Row Level Security), não pela tela.
+- **O visitante anônimo:**
+  - só lê as informações públicas do negócio;
+  - não vê dono, plano, suspensão, agendamentos nem dados de clientes;
+  - não consegue gravar nada fora da função de agendamento.
+- **Dois clientes no mesmo horário são impossíveis.** A trava fica no próprio banco.
+- **Anti-spam:**
+  - no máximo 4 reservas a cada 30 min vindas do mesmo aparelho/rede (guarda só um código, nunca o IP);
+  - no máximo 20 reservas a cada 10 min por negócio;
+  - no máximo 3 agendamentos em aberto por WhatsApp;
+  - um campo invisível pega robôs simples.
+- **Links e textos validados no banco:**
+  - o link do mapa e as fotos só aceitam `https://`, o que bloqueia links `javascript:` usados em ataques;
+  - Instagram e WhatsApp só no formato certo;
+  - os textos têm tamanho máximo.
+- **Política de segurança de conteúdo (CSP)** em todas as páginas:
+  - o navegador só executa scripts do próprio site;
+  - todo o JavaScript está em arquivos, nenhum dentro do HTML.
+- **Na VPS:**
+  - HTTPS obrigatório (HSTS);
+  - proteção contra o site ser embutido em outros (clickjacking);
+  - arquivos internos (`supabase/`, `src/`, `package.json`…) nunca são servidos;
+  - o painel não aparece no Google.
+- **Senhas:** mínimo de 8 caracteres com letras e números. Configure o mesmo mínimo no Supabase (Passo 3 da instalação).
+- **Plano e suspensão** só mudam pelo Supabase. O dono não consegue alterar.
+
+**Recomendações:**
+- ative a **autenticação em duas etapas** na sua conta do Supabase e do GitHub;
+- nunca coloque a *secret key* em nenhum arquivo do site;
+- faça backup mensal (Table Editor → Export CSV) enquanto estiver no plano grátis.
+
+---
+
+## Anúncios nas redes sociais
+
+- **Link do anúncio:** use `https://seudominio.com.br/?utm_source=instagram`. Quando a pessoa clica em qualquer botão de WhatsApp, a mensagem chega com **"(vim pelo Instagram)"**, e você sabe de onde veio cada contato. Também funciona `facebook`, `tiktok` e `google`.
+- **Link direto para uma demonstração:** `https://seudominio.com.br/?nicho=barbearia#demo` abre a página já com a demonstração do nicho.
+- **Imagem de compartilhamento:** `assets/og-image.png` aparece quando o link é postado no Instagram, WhatsApp e Facebook.
+- **Política de privacidade:** use `https://seudominio.com.br/privacidade/`, exigida pela Meta em formulários de anúncio.
+- **Indicação no rodapé:** cada página de cliente tem no rodapé "Agendamento online por MinhaAgenda", com link rastreado (`utm_source=rodape`). Cliente do salão que gostou chega até você.
+
+---
+
+## Gerenciar seus clientes (você, como fornecedor)
 
 ### Cadastrar um cliente novo (na visita ou depois)
 
@@ -133,9 +210,10 @@ No Supabase, **Table Editor** mostra todas as tabelas de todos os clientes:
 > O dono **não consegue** mudar o próprio plano nem tirar a suspensão: o banco bloqueia. Só você, pelo Table Editor.
 > (A coluna `ativo` é outra coisa: é o botão "Página no ar" que o próprio dono usa para pausar a agenda, por exemplo nas férias.)
 
+
 ### Atualizar o sistema
 
-Altere os arquivos no VS Code → `git add .` → `git commit -m "o que mudou"` → `git push`. O GitHub Pages publica sozinho em 1 a 2 minutos, para todos os clientes ao mesmo tempo.
+Altere os arquivos no VS Code → `git add .` → `git commit -m "o que mudou"` → `git push`. Na VPS, rode `./deploy/atualizar.sh`. No GitHub Pages ou Cloudflare Pages, a publicação é automática.
 
 ---
 
@@ -196,6 +274,12 @@ A comissão é **gravada em cada atendimento**. Mudar a regra hoje não muda o q
 
 Links das demonstrações: `?demo=salao`, `barbearia`, `esmalteria`, `estetica`, `spa`, `lash`, `consultora`, `tattoo`.
 
+### Clientes
+A aba **Clientes** é montada sozinha a partir dos agendamentos:
+- mostra visitas, quanto cada cliente já gastou, faltas, última e próxima visita;
+- o filtro **Sumidos há 45+ dias** traz o botão **Chamar de volta**, com mensagem pronta e o link de agendamento;
+- o profissional vê só os clientes que atendeu.
+
 ---
 
 ## Personalizar
@@ -204,11 +288,10 @@ Links das demonstrações: `?demo=salao`, `barbearia`, `esmalteria`, `estetica`,
 |---|---|
 | Nome do produto, seu WhatsApp, e-mail, cidade, **preços dos planos** | `assets/config.js` |
 | Cores, fonte, textos, serviços e horários de exemplo de cada nicho | `assets/nichos.js` |
-| Cores da sua marca (página de vendas e painel) | `TEMA_PRODUTO` em `assets/nichos.js` |
-| Textos da página de vendas | `index.html` |
-| Perguntas frequentes e diferenciais das páginas dos negócios | `TEXTOS` em `assets/nichos.js` |
-
-Cada dono também pode mudar pelo próprio painel (**Meu negócio**): nome, cor principal, textos do topo, endereço, Instagram e link do Maps.
+| Cores da sua marca (vendas e painel) | `src/app.css` (depois `npm run build`) |
+| Textos da página de vendas | `index.html` e `assets/vendas.js` |
+| Perguntas e passos das páginas dos negócios | `TEXTOS` em `assets/nichos.js` |
+| Política de privacidade | `privacidade/index.html` (peça para um advogado revisar) |
 
 ---
 
@@ -217,18 +300,16 @@ Cada dono também pode mudar pelo próprio painel (**Meu negócio**): nome, cor 
 - **Supabase Free:** 2 projetos, 500 MB de banco, 1 GB de fotos. Dá para muitos pequenos negócios: cada agendamento ocupa poucos KB e as fotos são reduzidas automaticamente antes do envio.
 - **Pausa por inatividade:** projeto grátis **sem nenhum acesso por 1 semana é pausado**. Com clientes usando todo dia isso não acontece. Se acontecer, entre no Supabase e clique em *Restore*. Quando tiver clientes pagando, vale migrar para o plano pago, que não pausa e tem backup automático.
 - **GitHub Pages:** grátis com repositório público.
+- **VPS:** plano mensal do provedor (o menor costuma bastar; confira os preços atuais) mais o domínio.
 
 ---
 
-## O que ainda não faz (próximos passos sugeridos)
+## Próximos passos sugeridos
 
-- **Envio automático de lembretes no WhatsApp:** hoje o lembrete é enviado com 1 clique (dono ou profissional). Automático exige a API oficial do WhatsApp (Meta), com custo por mensagem.
-- **Serviço por profissional:** hoje qualquer profissional pode fazer qualquer serviço. Útil para salões com especialistas (ex.: só a colorista faz coloração).
-- **Controle de comissão paga:** hoje o relatório mostra quanto pagar; marcar "pago em tal dia" ainda é manual.
-- **Painel do fornecedor:** lista de clientes, vencimentos e suspensão sem abrir o Supabase.
-- **Domínio próprio** (ex.: `agenda.seunegocio.com.br`): o GitHub Pages aceita, em *Settings → Pages → Custom domain*.
-- **Aviso de privacidade (LGPD):** o sistema guarda nome e WhatsApp dos clientes finais. Antes de vender em escala, publique uma política de privacidade simples.
-- **Tailwind via CDN:** ótimo para começar e editar fácil; o navegador mostra um aviso no console dizendo que não é para produção. Funciona normalmente, e mais tarde dá para trocar por um CSS compilado.
+- **Lembrete automático no WhatsApp** pela API oficial da Meta (custo por mensagem).
+- **Serviço por profissional** (ex.: só a colorista faz coloração).
+- **Controle de comissão paga** ("paguei em tal dia").
+- **Painel do fornecedor:** clientes, vencimentos e suspensão sem abrir o Supabase.
 
 ---
 
@@ -236,36 +317,25 @@ Cada dono também pode mudar pelo próprio painel (**Meu negócio**): nome, cor 
 
 ```
 minhaagenda/
-├── index.html              Página de vendas
-├── agendar/index.html      Página pública de cada negócio (+ demonstrações)
-├── painel/index.html       Painel do dono
+├── index.html               Página de vendas
+├── agendar/index.html       Página pública de cada negócio (+ demonstrações)
+├── painel/index.html        Painel do dono e da equipe
+├── privacidade/index.html   Política de privacidade
 ├── assets/
-│   ├── config.js           ← SUAS configurações (Supabase, WhatsApp, planos)
-│   ├── nichos.js           Modelos por nicho (cores, serviços, textos)
-│   ├── comum.js            Funções compartilhadas
-│   ├── agendar.js          Lógica da página de agendamento
-│   ├── painel.js           Lógica do painel
-│   ├── base.css            Componentes visuais (botões, cartões, campos)
-│   └── tailwind-tema.js    Liga as cores do Tailwind ao tema
-└── supabase/schema.sql     Banco de dados (rodar uma vez no Supabase)
+│   ├── config.js            ← SUAS configurações (Supabase, WhatsApp, planos)
+│   ├── nichos.js            Modelos por nicho (cores, serviços, textos)
+│   ├── comum.js             Funções compartilhadas (segurança, datas, WhatsApp)
+│   ├── vendas.js            Interações da página de vendas
+│   ├── agendar.js           Página de agendamento
+│   ├── painel.js            Painel
+│   ├── tema-escuro.js       Aplica o modo escuro sem piscar
+│   ├── privacidade.js       Preenche a política
+│   ├── app.css              Visual compilado (gerado, não edite)
+│   ├── fonts/               Fontes do próprio site
+│   ├── vendor/              Supabase, QR Code e ícones (sem CDN externo)
+│   ├── favicon.svg, og-image.png
+├── src/app.css              Fonte do visual (edite aqui)
+├── scripts/build-icons.mjs  Gera o pacote de ícones
+├── supabase/schema.sql      Banco de dados (rodar no Supabase)
+└── deploy/                  VPS: Caddyfile, docker-compose.yml, .env.exemplo, atualizar.sh
 ```
-
-### Como o "nunca dois clientes no mesmo horário" funciona
-
-A regra está **no banco de dados** (`sem_conflito_de_horario` em `schema.sql`), não só na tela. Mesmo se duas pessoas confirmarem no mesmo segundo, o Postgres aceita só uma. A outra recebe "Esse horário acabou de ser reservado" e escolhe outro. Com "sem preferência", o sistema tenta o próximo profissional livre automaticamente. A mesma regra vale para os agendamentos lançados pelo painel.
-
----
-
-## Atualizar para a versão 2
-
-Para quem já instalou a primeira versão. **Nenhum dado é perdido.**
-
-1. **Banco:** Supabase → **SQL Editor** → *New query* → cole **todo** o `supabase/schema.sql` novo → **Run** → confirme o aviso de "destructive operation".
-   Deve aparecer *Success*. As tabelas `comissoes`, `acessos` e `convites` aparecem no Table Editor.
-2. **Site:** no GitHub, envie os arquivos alterados (**Add file → Upload files**, arrastando por cima dos antigos):
-   - `index.html`
-   - `README.md`
-   - `assets/config.js` ⚠️ **antes, copie para o novo a sua URL e a sua chave do Supabase**, senão o site perde a configuração
-   - `assets/painel.js`, `assets/base.css`, `assets/comum.js`, `assets/agendar.js`, `assets/nichos.js`
-   - `supabase/schema.sql`
-3. Espere a publicação terminar (1 a 3 minutos) e recarregue o painel com **Ctrl+F5**.
