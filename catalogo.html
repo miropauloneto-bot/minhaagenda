@@ -37,7 +37,7 @@
       radial-gradient(50% 80% at 10% 100%,rgb(var(--blush)/.55),transparent 70%),
       rgb(var(--ink))}
     .capa::after{content:"";position:absolute;inset:0;background-image:radial-gradient(rgb(255 255 255/.12) 1px,transparent 1px);background-size:14px 14px}
-    .capa-texto{position:absolute;right:1.25rem;bottom:1.1rem;z-index:1;color:#fff;font-family:var(--display);font-weight:800;font-size:2.4rem;line-height:.9;letter-spacing:-.03em;text-align:right;opacity:.92}
+    .capa-texto{position:absolute;right:1.25rem;top:1rem;max-width:58%;overflow-wrap:anywhere;z-index:1;color:#fff;font-family:var(--display);font-weight:800;font-size:2.4rem;line-height:.9;letter-spacing:-.03em;text-align:right;opacity:.92}
     .capa-texto small{display:block;font-size:.8rem;letter-spacing:.2em;font-weight:600;opacity:.75;margin-top:.35rem}
     .status{position:absolute;left:1rem;top:1rem;z-index:2;background:#fff;border-radius:.6rem;padding:.35rem .7rem;box-shadow:0 4px 14px -6px rgb(0 0 0/.35);line-height:1.15}
     .status b{display:flex;align-items:center;gap:.4rem;font-size:.95rem}
@@ -123,7 +123,7 @@
     textarea:focus,.campo:focus{border-color:rgb(var(--brand))}
     .rotulo{display:block;font-weight:700;font-size:.85rem;margin:1rem 0 .35rem}
     .linha-acao{display:flex;gap:.75rem;align-items:center}
-    .passo{display:flex;align-items:center;border:1px solid rgb(var(--line));border-radius:.8rem;overflow:hidden;flex:none}
+    .passo{position:relative;display:flex;align-items:center;border:1px solid rgb(var(--line));border-radius:.8rem;flex:none}
     .passo button{width:2.6rem;height:2.9rem;display:grid;place-items:center;color:rgb(var(--brand))}
     .passo button:disabled{color:rgb(var(--muted)/.5);cursor:default}
     .passo output{min-width:1.8rem;text-align:center;font-weight:800}

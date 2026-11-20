@@ -57,10 +57,13 @@
   function escolherNicho(id, foco) {
     const n = NICHOS[id];
     $$('[data-nicho]').forEach((b) => { const on = b.dataset.nicho === id; b.setAttribute('aria-checked', on); b.querySelector('[data-anel]').classList.toggle('ring-4', on); });
-    frame.src = `agendar.html?demo=${id}`;
-    $('[data-slot="demo-link"]').href = `agendar.html?demo=${id}`;
+    const pagina = n.modo === 'pedido' ? 'loja' : 'agendar';      /* marmitaria e passeios: cardápio com pedido no WhatsApp */
+    frame.src = `${pagina}.html?demo=${id}`;
+    $('[data-slot="demo-link"]').href = `${pagina}.html?demo=${id}`;
     $('[data-slot="demo-titulo"]').textContent = `${n.emoji} ${n.rotulo}`;
-    $('[data-slot="demo-detalhe"]').textContent = `Já vem com ${n.servicos.length} serviços, ${n.profissionais.length} profissional(is) e horários de exemplo. Você troca tudo pelo painel.`;
+    $('[data-slot="demo-detalhe"]').textContent = n.modo === 'pedido'
+      ? `${n.loja.aba} com ${n.loja.acao} pelo WhatsApp: já vem com ${n.servicos.length} ${n.loja.itens} de exemplo, com escolhas e horários. Você troca tudo pelo painel.`
+      : `Já vem com ${n.servicos.length} serviços, ${n.profissionais.length} profissional(is) e horários de exemplo. Você troca tudo pelo painel.`;
     if (foco) $(`[data-nicho="${id}"]`).focus();
   }
   slot('amostras', Object.entries(NICHOS).map(([id, n]) => `

@@ -1,18 +1,21 @@
 /* =====================================================================
    CATALOGO.JS — vitrine de produtos com pedido pelo WhatsApp.
-   Para usar com um cliente, edite só o objeto LOJA abaixo.
+   Usado por:
+     catalogo.html  → vitrine de exemplo (dados de PADRAO, abaixo)
+     cardapio.html  → cardápio de exemplo (dados de cardapio-dados.js)
+     loja.html      → página real dos nichos de pedido (dados do Supabase, via loja.js)
    Nada é gravado: o carrinho vive na memória da aba e o pedido
    sai como mensagem de WhatsApp para a loja.
    ===================================================================== */
 (() => {
   'use strict';
 
-  const LOJA = window.LOJA_DADOS || {
+  const PADRAO = {
     nome: 'Studio Bella',
     sigla: 'SB',                         // aparece no quadrado do logo
     capa: ['Studio', 'Bella', 'loja do salão'],
     endereco: 'Av. Exemplo, 123 - Bairro Modelo, Fortaleza - CE',
-    whatsapp: '5585900000000',           // DDI + DDD + número da LOJA (troque pelo do cliente)
+    whatsapp: '5585987971155',           // DDI + DDD + número da LOJA (troque pelo do cliente)
     pedidoMinimo: 30,
     taxaEntrega: 8,
     entrega: true,                       // false = só retirada no salão
@@ -51,8 +54,17 @@
     ]
   };
 
+  function iniciar(LOJA) {
   /* textos que mudam conforme o tipo de loja (podem vir em LOJA.textos) */
-  const T = Object.assign({ sacola: 'sacola', retirada: 'Retirar no salão', obs: 'Ex.: embrulhar para presente', origem: 'vitrine' }, LOJA.textos || {});
+  const T = Object.assign({ sacola: 'sacola', retirada: 'Retirar no salão', obs: 'Ex.: embrulhar para presente', origem: 'vitrine', unidade: '', quantidade: '', linhaEntrega: true, enviar: 'Enviar pedido no WhatsApp', saudacao: 'Quero fazer um pedido' }, LOJA.textos || {});
+  T.tituloSacola = T.tituloSacola || (T.sacola === 'sacola' ? 'Sua sacola' : 'Seu ' + T.sacola);
+  T.verSacola = T.verSacola || 'Ver ' + T.sacola;
+  T.adicionar = T.adicionar || (T.sacola === 'carrinho' ? 'Adicionar ao carrinho' : 'Adicionar à ' + T.sacola);
+  const qtdTxt = (q) => (T.quantidade ? `${q} ${q === 1 ? T.quantidade.replace(/s$/, '') : T.quantidade}` : `${q}x`);
+  const porUnidade = () => (T.unidade ? ` <small class="unidade">${T.unidade}</small>` : '');
+  LOJA.pagamentos = (LOJA.pagamentos || []).length ? LOJA.pagamentos : ['Pix'];
+  LOJA.sigla = LOJA.sigla || LOJA.nome.split(/\s+/).filter((w) => w.length > 2 || /^[A-Z]/.test(w)).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || LOJA.nome.slice(0, 2).toUpperCase();
+  if (!LOJA.capa) { const w = LOJA.nome.split(/\s+/); LOJA.capa = w.length > 1 ? [w[0], w.slice(1).join(' '), LOJA.subtitulo || ''] : [LOJA.nome, '', LOJA.subtitulo || '']; }
   if (LOJA.cor) { const h = LOJA.cor.replace('#', ''); document.documentElement.style.setProperty('--brand', [0, 2, 4].map((i) => parseInt(h.substr(i, 2), 16)).join(' ')); }
   /* grupos de escolha: aceita "opcoes" (uma escolha) ou "grupos" (várias, com mínimo e máximo) */
   const gruposDe = (p) => p.grupos || (p.opcoes ? [{ titulo: p.opcoes.titulo, min: p.opcoes.obrigatorio ? 1 : 0, max: 1, itens: p.opcoes.itens }] : []);
@@ -94,6 +106,11 @@
       carne: `<ellipse cx="100" cy="150" rx="70" ry="16" fill="#fff"/><path d="M58 128c-6-30 20-58 52-56 30 2 48 26 40 52-6 18-26 26-48 24-22-2-40-6-44-20Z" fill="${c}"/><path d="M76 110c14-8 34-10 52-2M74 126c18-6 38-6 56 0" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".45" fill="none"/>`,
       lata: `<rect x="70" y="44" width="60" height="124" rx="12" fill="${c}"/><rect x="72" y="40" width="56" height="10" rx="5" fill="#cfd3dc"/><rect x="72" y="162" width="56" height="8" rx="4" fill="#cfd3dc"/><rect x="70" y="86" width="60" height="34" fill="#fff" opacity=".85"/><rect x="78" y="54" width="7" height="100" rx="3.5" fill="#fff" opacity=".4"/>`,
       garrafa: `<rect x="90" y="26" width="20" height="14" rx="3" fill="#1b1a3d"/><path d="M90 40h20v16c0 10 22 16 22 36v70a10 10 0 0 1-10 10H78a10 10 0 0 1-10-10V92c0-20 22-26 22-36Z" fill="${c}" opacity=".9"/><rect x="68" y="108" width="64" height="34" fill="#fff" opacity=".85"/><rect x="76" y="96" width="7" height="70" rx="3.5" fill="#fff" opacity=".4"/>`,
+      praia: `<circle cx="140" cy="62" r="20" fill="#ffd43b"/><path d="M0 128c30-10 60-10 100 0s70 10 100 0v72H0Z" fill="${c}"/><path d="M0 150c30-8 70-8 100 0s70 8 100 0v50H0Z" fill="#f4e3b5"/><path d="M58 150V96" stroke="#8d5524" stroke-width="5"/><path d="M58 96c-22-4-34 6-38 14 14-8 26-8 38-14Zm0 0c22-4 34 6 38 14-14-8-26-8-38-14Zm0 0c-6-18 6-30 14-32-8 10-10 20-14 32Z" fill="#2f9e44"/>`,
+      buggy: `<path d="M0 140c40-24 80-30 120-18s60 8 80 0v78H0Z" fill="#f4e3b5"/><path d="M48 128l14-30h62l22 30Z" fill="${c}"/><path d="M66 98l10-16h30l10 16" fill="none" stroke="#1b1a3d" stroke-width="5"/><circle cx="66" cy="134" r="15" fill="#1b1a3d"/><circle cx="134" cy="134" r="15" fill="#1b1a3d"/><circle cx="66" cy="134" r="6" fill="#fff"/><circle cx="134" cy="134" r="6" fill="#fff"/>`,
+      serra: `<path d="M0 160 62 70l40 50 30-36 68 76Z" fill="${c}"/><path d="M62 70l14 18-14-4-12 6Z" fill="#fff" opacity=".7"/><path d="M118 104c4 20 0 40-6 60" stroke="#74c0fc" stroke-width="8" fill="none" stroke-linecap="round"/><circle cx="150" cy="52" r="14" fill="#ffd43b"/>`,
+      cidade: `<rect x="34" y="88" width="34" height="78" rx="3" fill="${c}"/><rect x="74" y="60" width="40" height="106" rx="3" fill="${c}" opacity=".85"/><rect x="120" y="96" width="44" height="70" rx="3" fill="${c}" opacity=".7"/><path d="M74 60l20-22 20 22Z" fill="${c}"/><g fill="#fff" opacity=".8"><rect x="42" y="98" width="8" height="8"/><rect x="54" y="98" width="8" height="8"/><rect x="84" y="74" width="8" height="10"/><rect x="98" y="74" width="8" height="10"/><rect x="84" y="94" width="8" height="10"/><rect x="98" y="94" width="8" height="10"/><rect x="130" y="108" width="8" height="8"/><rect x="146" y="108" width="8" height="8"/></g>`,
+      mala: `<rect x="80" y="44" width="40" height="22" rx="8" fill="none" stroke="#1b1a3d" stroke-width="7"/><rect x="50" y="62" width="100" height="100" rx="14" fill="${c}"/><rect x="70" y="62" width="10" height="100" fill="#fff" opacity=".35"/><rect x="120" y="62" width="10" height="100" fill="#fff" opacity=".35"/><circle cx="72" cy="168" r="7" fill="#1b1a3d"/><circle cx="128" cy="168" r="7" fill="#1b1a3d"/>`,
       vale: `<rect x="30" y="60" width="140" height="88" rx="14" fill="${c}"/><circle cx="30" cy="104" r="12" fill="#f7f6fd"/><circle cx="170" cy="104" r="12" fill="#f7f6fd"/><text x="100" y="98" text-anchor="middle" font-family="Bricolage Grotesque,system-ui" font-weight="800" font-size="20" fill="#fff">VALE</text><text x="100" y="122" text-anchor="middle" font-family="Manrope,system-ui" font-weight="700" font-size="12" fill="#fff" opacity=".75">PRESENTE</text>`
     };
     return `<svg viewBox="0 0 200 200" preserveAspectRatio="xMidYMid ${inteira ? 'meet' : 'slice'}" aria-hidden="true">${fundo}${f[tipo] || ''}</svg>`;
@@ -102,16 +119,20 @@
 
   /* ---------------- horário de funcionamento ---------------- */
   const minutos = (hhmm) => { const [h, m] = hhmm.split(':').map(Number); return h * 60 + m; };
+  /* cada dia pode ter uma faixa ['09:00','18:00'] ou várias [['09:00','12:00'],['14:00','18:00']] */
+  const faixas = (d) => { const h = LOJA.horarios[d]; if (!h || !h.length) return []; return (Array.isArray(h[0]) ? h : [h]).slice().sort((x, y) => minutos(x[0]) - minutos(y[0])); };
   function situacao(agora = new Date()) {
     const d = agora.getDay(); const m = agora.getHours() * 60 + agora.getMinutes();
-    const hoje = LOJA.horarios[d];
-    if (hoje && m >= minutos(hoje[0]) && m < minutos(hoje[1])) {
-      const falta = minutos(hoje[1]) - m;
-      return { aberto: true, detalhe: falta <= 60 ? `Fecha em ${falta} min.` : `Fecha às ${hoje[1]}` };
+    const fs = faixas(d);
+    const dentro = fs.find(([a, f]) => m >= minutos(a) && m < minutos(f));
+    if (dentro) {
+      const falta = minutos(dentro[1]) - m;
+      return { aberto: true, detalhe: falta <= 60 ? `Fecha em ${falta} min.` : `Fecha às ${dentro[1]}` };
     }
-    if (hoje && m < minutos(hoje[0])) return { aberto: false, detalhe: `Abre hoje às ${hoje[0]}` };
+    const depois = fs.find(([a]) => minutos(a) > m);
+    if (depois) return { aberto: false, detalhe: `Abre hoje às ${depois[0]}` };
     for (let i = 1; i <= 7; i++) {
-      const dia = (d + i) % 7; const h = LOJA.horarios[dia];
+      const dia = (d + i) % 7; const h = faixas(dia)[0];
       if (h) return { aberto: false, detalhe: `Abre ${i === 1 ? 'amanhã' : DIAS[dia].toLowerCase()} às ${h[0]}` };
     }
     return { aberto: false, detalhe: 'Sem horário definido' };
@@ -135,7 +156,7 @@
       <span class="item-txt">
         <span class="item-nome">${esc(p.nome)}</span>
         ${p.desc ? `<span class="item-desc">${esc(p.desc)}</span>` : ''}
-        <span class="preco">${gruposDe(p).some((g) => g.itens.some((o) => o.preco)) ? 'A partir de ' : ''}${brl(p.preco)}${p.de ? `<s>${brl(p.de)}</s>` : ''}</span>
+        <span class="preco">${gruposDe(p).some((g) => g.itens.some((o) => o.preco)) ? 'A partir de ' : ''}${brl(p.preco)}${porUnidade()}${p.de ? `<s>${brl(p.de)}</s>` : ''}</span>
         ${p.selo ? `<span class="selo">${esc(p.selo)}</span>` : ''}
       </span>
       ${temFoto ? `<span class="foto">${visual(p)}<span class="mais" aria-hidden="true">${icone.mais}</span></span>` : `<span class="mais" aria-hidden="true">${icone.mais}</span>`}
@@ -209,14 +230,14 @@
       ${p.foto || p.figura ? `<div class="produto-foto">${visual(p, true)}</div>` : ''}
       <h4 class="produto-nome">${esc(p.nome)}</h4>
       ${p.desc ? `<p class="produto-desc">${esc(p.desc)}</p>` : ''}
-      <p class="preco">${brl(p.preco)}${p.de ? `<s>${brl(p.de)}</s>` : ''}</p>
+      <p class="preco">${brl(p.preco)}${porUnidade()}${p.de ? `<s>${brl(p.de)}</s>` : ''}</p>
       ${blocos}
       <label class="rotulo" for="obs">Alguma observação?</label>
       <textarea id="obs" rows="2" maxlength="140" placeholder="${esc(T.obs)}"></textarea>`;
     const pe = `<div class="linha-acao">
-      <div class="passo"><button type="button" data-acao="qtd-menos" aria-label="Diminuir">${icone.menos}</button><output data-slot="p-qtd">1</output><button type="button" data-acao="qtd-mais" aria-label="Aumentar">${icone.mais}</button></div>
+      <div class="passo">${T.quantidade ? `<span class="rot-qtd">${esc(T.quantidade)}</span>` : ''}<button type="button" data-acao="qtd-menos" aria-label="Diminuir">${icone.menos}</button><output data-slot="p-qtd">1</output><button type="button" data-acao="qtd-mais" aria-label="Aumentar">${icone.mais}</button></div>
       <button type="button" class="btn btn-primary" data-acao="adicionar"><span>Adicionar</span><span data-slot="p-total"></span></button></div>`;
-    abrirFolha(`Adicionar ${T.sacola === 'carrinho' ? 'ao carrinho' : 'à ' + T.sacola}`, corpo, pe);
+    abrirFolha(T.adicionar, corpo, pe);
     atualizarProduto();
   }
   function escolhidos() { return atual.grupos.flatMap((g, gi) => [...atual.marcados[gi]].sort((x, y) => x - y).map((i) => g.itens[i])); }
@@ -282,9 +303,9 @@
       </div>
       <div class="totais" data-slot="totais"></div>
       <p class="aviso">${icone.escudo}<span>Seus dados vão só na mensagem do WhatsApp para a loja. Este site não grava nome, endereço nem pedido.</span></p>`;
-    const pe = `<button type="button" class="btn btn-wa" data-acao="enviar">${icone.wa}<span>Enviar pedido no WhatsApp</span></button>`;
-    if (slot('folha').hidden) abrirFolha(T.sacola === 'sacola' ? 'Sua sacola' : 'Seu ' + T.sacola, corpo, pe);
-    else { slot('folha-titulo').textContent = T.sacola === 'sacola' ? 'Sua sacola' : 'Seu ' + T.sacola; slot('folha-corpo').innerHTML = corpo; slot('folha-pe').innerHTML = pe; slot('folha-pe').hidden = false; }
+    const pe = `<button type="button" class="btn btn-wa" data-acao="enviar">${icone.wa}<span>${esc(T.enviar)}</span></button>`;
+    if (slot('folha').hidden) abrirFolha(T.tituloSacola, corpo, pe);
+    else { slot('folha-titulo').textContent = T.tituloSacola; slot('folha-corpo').innerHTML = corpo; slot('folha-pe').innerHTML = pe; slot('folha-pe').hidden = false; }
     atualizarTotais();
   }
   function atualizarTotais() {
@@ -299,12 +320,12 @@
   }
   function mensagem() {
     const taxa = pedido.modo === 'entrega' ? LOJA.taxaEntrega : 0;
-    const linhas = [...sacola.values()].map((l) => `• ${l.qtd}x ${l.p.nome}${l.opcao ? ` (${l.opcao})` : ''} — ${brl(l.unit * l.qtd)}${l.obs ? `\n   Obs.: ${l.obs}` : ''}`);
+    const linhas = [...sacola.values()].map((l) => `• ${qtdTxt(l.qtd)}${T.quantidade ? ' ·' : ''} ${l.p.nome}${l.opcao ? ` (${l.opcao})` : ''} — ${brl(l.unit * l.qtd)}${l.obs ? `\n   Obs.: ${l.obs}` : ''}`);
     return [
-      `Olá, ${LOJA.nome}! Quero fazer um pedido pel${T.origem === 'vitrine' ? 'a' : 'o'} ${T.origem}:`, '',
+      `Olá, ${LOJA.nome}! ${T.saudacao} pel${T.origem === 'vitrine' ? 'a' : 'o'} ${T.origem}:`, '',
       ...linhas, '',
       `Subtotal: ${brl(subtotal())}`,
-      pedido.modo === 'entrega' ? `Entrega: ${taxa ? brl(taxa) : 'grátis'}` : `Vou ${T.retirada.charAt(0).toLowerCase()}${T.retirada.slice(1)}`,
+      pedido.modo === 'entrega' ? `Entrega: ${taxa ? brl(taxa) : 'grátis'}` : T.linhaEntrega === false ? null : `Vou ${T.retirada.charAt(0).toLowerCase()}${T.retirada.slice(1)}`,
       `*Total: ${brl(subtotal() + taxa)}*`, '',
       pedido.nome.trim() ? `Nome: ${pedido.nome.trim()}` : null,
       pedido.modo === 'entrega' ? `Endereço: ${pedido.endereco.trim()}` : null,
@@ -319,10 +340,10 @@
   /* informação */
   function abrirInfo() {
     const hoje = new Date().getDay();
-    const tabela = DIAS.map((d, i) => { const h = LOJA.horarios[i]; return `<tr class="${i === hoje ? 'hoje' : ''}"><td>${d}</td><td>${h ? `${h[0]} – ${h[1]}` : 'Fechado'}</td></tr>`; }).join('');
+    const tabela = DIAS.map((d, i) => { const fs = faixas(i); return `<tr class="${i === hoje ? 'hoje' : ''}"><td>${d}</td><td>${fs.length ? fs.map(([a, f]) => `${a} – ${f}`).join(', ') : 'Fechado'}</td></tr>`; }).join('');
     abrirFolha('Informação', `<div class="info-lista">
-      <div>${icone.pino}<span><b>Endereço</b><br>${esc(LOJA.endereco)}</span></div>
-      ${LOJA.entrega ? `<div>${icone.moto}<span><b>Entrega</b><br>${esc(LOJA.prazo)}<br>Taxa: ${brl(LOJA.taxaEntrega)} · Pedido mínimo: ${brl(LOJA.pedidoMinimo)}</span></div>` : ''}
+      ${LOJA.endereco ? `<div>${icone.pino}<span><b>Endereço</b><br>${esc(LOJA.endereco)}</span></div>` : ''}
+      ${LOJA.entrega ? `<div>${icone.moto}<span><b>Entrega</b><br>${LOJA.prazo ? `${esc(LOJA.prazo)}<br>` : ''}Taxa: ${LOJA.taxaEntrega ? brl(LOJA.taxaEntrega) : 'grátis'}${LOJA.pedidoMinimo ? ` · Pedido mínimo: ${brl(LOJA.pedidoMinimo)}` : ''}</span></div>` : LOJA.prazo ? `<div>${icone.relogio}<span><b>Atendimento</b><br>${esc(LOJA.prazo)}</span></div>` : ''}
       <div>${icone.cartao}<span><b>Pagamento</b><br>${LOJA.pagamentos.map(esc).join(' · ')}</span></div>
       ${LOJA.instagram ? `<div>${icone.insta}<span><b>Instagram</b><br>${esc(LOJA.instagram)}</span></div>` : ''}
       <div>${icone.relogio}<span style="flex:1"><b>Horário de funcionamento</b><table class="horarios">${tabela}</table></span></div>
@@ -384,12 +405,19 @@
   window.addEventListener('scroll', () => barra.classList.toggle('colada', barra.getBoundingClientRect().top <= 0), { passive: true });
 
   /* ---------------- início ---------------- */
-  document.title = `${LOJA.nome} · Peça pelo WhatsApp`;
+  document.title = `${LOJA.nome} · ${LOJA.tituloPagina || 'Peça pelo WhatsApp'}`;
   slot('nome').textContent = LOJA.nome;
-  slot('sacola-rotulo').textContent = 'Ver ' + T.sacola;
+  slot('sacola-rotulo').textContent = T.verSacola;
   slot('logo').textContent = LOJA.sigla;
-  slot('endereco').textContent = LOJA.endereco;
+  slot('endereco').textContent = LOJA.endereco || '';
+  slot('endereco').parentElement.hidden = !LOJA.endereco;
   slot('capa-texto').innerHTML = `${esc(LOJA.capa[0])}<br>${esc(LOJA.capa[1])}<small>${esc(LOJA.capa[2] || '')}</small>`;
+  const maior = Math.max(...LOJA.capa.slice(0, 2).map((x) => String(x).length));
+  slot('capa-texto').style.fontSize = maior <= 7 ? '' : maior <= 10 ? '1.9rem' : maior <= 14 ? '1.5rem' : '1.2rem';
   pintarStatus(); setInterval(pintarStatus, 60000);
   pintarAbas(); pintarLista();
+  } /* fim de iniciar */
+
+  window.iniciarLoja = iniciar;
+  if (!window.LOJA_ASYNC) iniciar(window.LOJA_DADOS || PADRAO);
 })();

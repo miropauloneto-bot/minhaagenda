@@ -98,7 +98,7 @@
         <div class="max-w-xl">
           <h2 class="h2">Toque no seu tipo de negócio e veja a página do seu cliente.</h2>
           <p class="lead">É a página que vai na bio do Instagram. Teste como cliente: escolha serviço, profissional e horário. Nada é gravado.</p>
-          <div class="mt-8 grid grid-cols-4 gap-3" role="radiogroup" aria-label="Tipo de negócio" data-slot="amostras"></div>
+          <div class="mt-8 grid grid-cols-3 gap-3 sm:grid-cols-6" role="radiogroup" aria-label="Tipo de negócio" data-slot="amostras"></div>
           <div class="mt-8 card elevado p-5">
             <p class="font-display text-xl font-bold" data-slot="demo-titulo"></p>
             <p class="mt-1 text-sm text-muted" data-slot="demo-detalhe"></p>
@@ -202,20 +202,24 @@
             <p class="mt-2 text-sm text-muted">Fotos dos trabalhos enviadas pelo celular e dias bloqueados que somem da agenda na hora.</p>
           </article>
 
-          <!-- Vitrine de produtos (pedido pelo WhatsApp) -->
+          <!-- Vitrine de produtos e cardápio digital (pedido pelo WhatsApp) -->
           <article class="rounded-panel bg-page p-6 text-ink" style="grid-column:1/-1">
             <div class="flex flex-col gap-4 sm:flex-row" style="align-items:center;justify-content:space-between">
               <div class="min-w-0 flex-1">
                 <i data-lucide="store" class="h-6 w-6 text-brand"></i>
-                <h3 class="mt-4 text-2xl font-bold">Vitrine de produtos com pedido no WhatsApp</h3>
-                <p class="mt-2 max-w-2xl text-muted">Venda shampoo, máscara, esmalte, kits e vale-presente no mesmo link da agenda. O cliente monta a sacola, escolhe entrega ou retirada e o pedido chega pronto no seu WhatsApp. Nada fica gravado no site.</p>
+                <h3 class="mt-4 text-2xl font-bold">Cardápio, passeios e vitrine com pedido no WhatsApp</h3>
+                <p class="mt-2 max-w-2xl text-muted">Para marmitarias, agências de passeio e para o salão vender produtos. O dono edita tudo pelo painel. O cliente monta o pedido, escolhe entrega ou retirada e a mensagem chega pronta no WhatsApp da loja. Nada fica gravado no site.</p>
                 <ul class="mt-4 flex flex-wrap gap-y-2 text-sm font-semibold text-muted" style="column-gap:1.25rem">
                   <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-ok"></i>Aberto/fechado pelo seu horário</li>
-                  <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-ok"></i>Cores, tamanhos e observação</li>
+                  <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-ok"></i>Escolha de proteínas, guarnições, datas de saída e extras</li>
                   <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-ok"></i>Taxa de entrega e pedido mínimo</li>
                 </ul>
               </div>
-              <a href="catalogo.html" class="btn btn-primary shrink-0"><i data-lucide="external-link" class="h-4 w-4"></i>Ver a vitrine de exemplo</a>
+              <div class="flex flex-col gap-2 shrink-0">
+                <a href="loja.html?demo=marmitaria" class="btn btn-primary"><i data-lucide="external-link" class="h-4 w-4"></i>Ver cardápio de marmitas</a>
+                <a href="loja.html?demo=passeios" class="btn btn-soft"><i data-lucide="external-link" class="h-4 w-4"></i>Ver passeios e turismo</a>
+                <a href="catalogo.html" class="btn btn-soft"><i data-lucide="external-link" class="h-4 w-4"></i>Ver vitrine de salão</a>
+              </div>
             </div>
           </article>
         </div>

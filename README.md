@@ -1,6 +1,6 @@
 # MinhaAgenda — agendamento online para beleza e bem-estar
 
-Sistema completo para salões, barbearias, esmalterias e clínicas de estética.
+Sistema completo para salões, barbearias, esmalterias e clínicas de estética, e agora também para **marmitarias/restaurantes** e **passeios/turismo** (cardápio ou pacotes com pedido pelo WhatsApp).
 
 > Spas, lash/brow designers, consultoras e estúdios de tatuagem estão **ocultos** (em `NICHOS_OCULTOS`, no `nichos.js`). Para voltar a oferecer um deles, mova o bloco dele para dentro de `window.NICHOS`.
 
@@ -9,8 +9,38 @@ Sistema completo para salões, barbearias, esmalterias e clínicas de estética.
 | Página de vendas | `/` | Seus anúncios e visitas |
 | Demonstrações | `/agendar.html?demo=barbearia` | Mostrar sem banco de dados |
 | Página do negócio | `/agendar.html?n=nome-do-negocio` | O cliente final agendar |
+| Cardápio / pacotes | `/loja.html?n=nome-do-negocio` | Cliente de marmitaria ou passeio fazer o pedido (o link de agendar também redireciona) |
+| Demonstrações de pedido | `/loja.html?demo=marmitaria` · `/loja.html?demo=passeios` | Mostrar sem banco de dados |
 | Painel | `/painel.html` | Dono e profissionais |
 | Privacidade | `/privacidade.html` | Exigida por lei e pelos anúncios do Instagram/Facebook |
+
+---
+
+## Novidades da versão 4: marmitarias e passeios
+
+**Dois nichos novos, nos mesmos moldes dos outros.** Aparecem na demonstração da página de vendas, na criação de negócio do painel e em "Meu negócio".
+- **Marmitarias & Restaurantes:** cardápio com categorias em abas, marmita com escolha de proteínas e guarnições, adicionais pagos, carrinho, entrega ou retirada, taxa e pedido mínimo.
+- **Passeios & Turismo:** pacotes com data de saída, embarque, extras e número de pessoas (preço por pessoa).
+- **Sem agenda:** a página do cliente (`loja.html`) é um cardápio. O pedido chega pronto no WhatsApp do negócio e **nada do cliente fica gravado** no banco.
+- **Painel do dono** (só para esses nichos): Início, Cardápio/Pacotes, Horários, Meu negócio e Divulgar. Ele cadastra item com foto, preço, preço antigo riscado, etiqueta ("Mais pedido") e escolhas. Quando algo acaba, desmarca "Disponível".
+- **Escolhas em texto simples**, no cadastro do item:
+  ```
+  Proteína (escolha 1)
+  - Frango grelhado
+  - Peixe frito + 3,00
+
+  Guarnições (escolha de 1 a 3)
+  - Arroz
+  - Feijão
+
+  Adicionais (até 2)
+  - Ovo frito + 2,00
+  ```
+  Regras: `(escolha 1)`, `(escolha 2)`, `(escolha de 1 a 3)`, `(até 2)` ou `(opcional)`. Para passeios, use o mesmo formato para as datas: `Data de saída (escolha 1)` e embaixo `- Sábado, 7h (10 vagas)`.
+
+**Para ativar (uma vez só):** no Supabase, abra **SQL Editor › New query**, cole o arquivo **`atualizacao-v4.sql`** e clique em **Run**. Ele só acrescenta colunas, sem apagar nada, e pode ser rodado de novo sem problema. Instalações novas já recebem isso no `schema.sql` (seção 11).
+
+As páginas antigas `catalogo.html` (vitrine de salão) e `cardapio.html` (cardápio fixo) continuam funcionando como exemplos.
 
 ---
 
@@ -335,6 +365,10 @@ A aba **Clientes** é montada sozinha a partir dos agendamentos:
 |---|---|
 | `index.html` | Página de vendas |
 | `agendar.html` | Página pública de cada negócio (e as demonstrações) |
+| `loja.html` · `loja.js` | Página pública dos nichos de pedido (marmitaria, passeios) |
+| `catalogo.js` | Motor do cardápio/vitrine (carrinho, escolhas, mensagem do WhatsApp) |
+| `catalogo.html` · `cardapio.html` · `cardapio-dados.js` | Exemplos fixos de vitrine de salão e cardápio |
+| `atualizacao-v4.sql` | Atualização do banco para os nichos de pedido (rodar uma vez) |
 | `painel.html` | Painel do dono e da equipe |
 | `privacidade.html` | Política de privacidade |
 | `verificar.html` | Confere se todos os arquivos subiram |

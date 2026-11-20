@@ -79,6 +79,81 @@
         { nome: 'Massagem modeladora', descricao: 'Contorno corporal e firmeza.', duracao_min: 60, preco: 130, categoria: 'Corporal' }
       ],
       portfolio: [['Protocolo antiacne', 'Facial', '🧖‍♀️'], ['Drenagem', 'Corporal', '🌿'], ['Rejuvenescimento', 'Facial', '🧖‍♀️'], ['Modeladora', 'Corporal', '🌿'], ['Clareamento de manchas', 'Facial', '🧖‍♀️'], ['Nosso espaço', 'Corporal', '🌿']]
+    },
+
+    /* ---------- Nichos de PEDIDO (modo: 'pedido') ----------
+       Em vez de agenda, a página do cliente é um cardápio/vitrine (loja.html)
+       e o pedido chega pronto no WhatsApp. "servicos" aqui são os itens.
+       opcoes: grupos de escolha. min = obrigatório escolher, max = pode escolher. */
+    marmitaria: {
+      rotulo: 'Marmitarias & Restaurantes', emoji: '🍱', nomeDemo: 'Sabor da Casa', modo: 'pedido',
+      tema: { ...CLARO, brand: '217 72 15', brandContrast: '255 255 255', accent: '255 232 214', fonte: 'sans' },
+      hero: { selo: 'Cardápio online', titulo: 'Comida caseira, *pedido no WhatsApp*', subtitulo: 'Monte sua marmita, escolha entrega ou retirada e mande o pedido pronto.' },
+      loja: {
+        aba: 'Cardápio', acao: 'pedido', icone: 'layers', item: 'Prato', itens: 'pratos', origem: 'cardápio',
+        chamada: 'Peça pelo nosso cardápio online', verTexto: 'ver o cardápio e deixar seu pedido pronto',
+        textos: { sacola: 'carrinho', tituloSacola: 'Seu carrinho', verSacola: 'Ver carrinho', adicionar: 'Adicionar ao carrinho', retirada: 'Retirar no local', obs: 'Ex.: sem cebola, feijão separado' },
+        entrega: true, taxa: 5, minimo: 15, pagamentos: 'Pix, Cartão na entrega, Dinheiro', prazo: 'Entrega de 30 a 50 min · retirada em 15 min'
+      },
+      horarios: semana([1, 2, 3, 4, 5], '10:30', '14:30').concat([[6, '10:30', '14:00']]),
+      profissionais: [],
+      servicos: [
+        { nome: 'Marmita P', descricao: '1 proteína + até 3 guarnições. Serve 1 pessoa.', duracao_min: 30, preco: 15, categoria: 'Marmita P 1 opção', selo: 'Mais pedida', figura: 'marmita', cor: '#d9480f',
+          opcoes: [
+            { titulo: 'Proteína', min: 1, max: 1, itens: [{ nome: 'Frango grelhado' }, { nome: 'Carne de sol acebolada' }, { nome: 'Frango ao molho' }, { nome: 'Peixe frito', preco: 3 }] },
+            { titulo: 'Guarnições', min: 1, max: 3, itens: [{ nome: 'Arroz branco' }, { nome: 'Arroz à grega' }, { nome: 'Feijão de corda' }, { nome: 'Feijão carioca' }, { nome: 'Macarrão' }, { nome: 'Farofa' }, { nome: 'Salada' }] }
+          ] },
+        { nome: 'Marmita G', descricao: '2 proteínas + até 4 guarnições. Bem servida.', duracao_min: 30, preco: 22, categoria: 'Marmita G 2 opções de proteína', figura: 'marmita', cor: '#2f9e44',
+          opcoes: [
+            { titulo: 'Proteínas', min: 2, max: 2, itens: [{ nome: 'Frango grelhado' }, { nome: 'Carne de sol acebolada' }, { nome: 'Frango ao molho' }, { nome: 'Peixe frito', preco: 3 }] },
+            { titulo: 'Guarnições', min: 1, max: 4, itens: [{ nome: 'Arroz branco' }, { nome: 'Arroz à grega' }, { nome: 'Feijão de corda' }, { nome: 'Feijão carioca' }, { nome: 'Macarrão' }, { nome: 'Farofa' }, { nome: 'Salada' }] },
+            { titulo: 'Adicionais', min: 0, max: 2, itens: [{ nome: 'Ovo frito', preco: 2 }, { nome: 'Queijo coalho', preco: 4 }] }
+          ] },
+        { nome: 'Arroz à grega', descricao: 'Porção avulsa de 300 g.', duracao_min: 30, preco: 7, categoria: 'Guarnições', figura: 'tigela', cor: '#f2c14e' },
+        { nome: 'Feijão de corda', descricao: 'Porção avulsa de 300 g.', duracao_min: 30, preco: 7, categoria: 'Guarnições', figura: 'tigela', cor: '#b08968' },
+        { nome: 'Farofa da casa', descricao: 'Com bacon. Porção de 150 g.', duracao_min: 30, preco: 5, categoria: 'Guarnições', figura: 'tigela', cor: '#d4a373' },
+        { nome: 'Carne de sol acebolada', descricao: 'Porção de 200 g.', duracao_min: 30, preco: 16, categoria: 'Proteínas', figura: 'carne', cor: '#9c4221' },
+        { nome: 'Frango grelhado', descricao: 'Filé de peito, porção de 200 g.', duracao_min: 30, preco: 12, categoria: 'Proteínas', figura: 'carne', cor: '#e9a25f' },
+        { nome: 'Refrigerante lata 350 ml', descricao: 'Gelado.', duracao_min: 30, preco: 5, categoria: 'Bebidas', figura: 'lata', cor: '#c92a2a',
+          opcoes: [{ titulo: 'Sabor', min: 1, max: 1, itens: [{ nome: 'Cola' }, { nome: 'Guaraná' }, { nome: 'Laranja' }] }] },
+        { nome: 'Suco natural 1 L', descricao: 'Feito na hora.', duracao_min: 30, preco: 12, categoria: 'Bebidas', figura: 'garrafa', cor: '#f59f00',
+          opcoes: [{ titulo: 'Sabor', min: 1, max: 1, itens: [{ nome: 'Laranja' }, { nome: 'Caju' }, { nome: 'Acerola' }, { nome: 'Maracujá' }] }] }
+      ],
+      portfolio: []
+    },
+
+    passeios: {
+      rotulo: 'Passeios & Turismo', emoji: '🧭', nomeDemo: 'Rota Sol Turismo', modo: 'pedido',
+      tema: { ...CLARO, bg: '247 251 253', sunken: '236 245 249', line: '219 234 242', brand: '2 132 199', brandContrast: '255 255 255', accent: '207 236 252', fonte: 'sans' },
+      hero: { selo: 'Reservas online', titulo: 'Seu próximo passeio, *reservado pelo celular*', subtitulo: 'Escolha o passeio, a data e quantas pessoas vão. A reserva chega pronta no WhatsApp da agência.' },
+      loja: {
+        aba: 'Pacotes', acao: 'reserva', icone: 'map', item: 'Pacote', itens: 'pacotes', origem: 'site de passeios',
+        chamada: 'Reserve seu passeio pelo nosso site', verTexto: 'ver os passeios e montar sua reserva',
+        textos: { sacola: 'reserva', tituloSacola: 'Sua reserva', verSacola: 'Ver reserva', adicionar: 'Adicionar à reserva', retirada: 'Embarque no ponto combinado', obs: 'Ex.: levamos uma criança de 5 anos', unidade: 'por pessoa', quantidade: 'pessoas', linhaEntrega: false, enviar: 'Enviar reserva no WhatsApp', saudacao: 'Quero fazer uma reserva' },
+        entrega: false, taxa: 0, minimo: 0, pagamentos: 'Pix (sinal de 30%), Cartão em até 3x', prazo: 'Confirmamos a reserva pelo WhatsApp em até 2 horas'
+      },
+      horarios: semana([1, 2, 3, 4, 5, 6], '08:00', '18:00'),
+      profissionais: [],
+      servicos: [
+        { nome: 'Passeio de buggy pelas dunas', descricao: 'Dia inteiro com paradas para banho em lagoas. Buggy para até 4 pessoas, com bugueiro credenciado.', duracao_min: 30, preco: 120, preco_de: 150, categoria: 'Praias e dunas', selo: 'Mais procurado', figura: 'buggy', cor: '#f59f00',
+          opcoes: [
+            { titulo: 'Data de saída', min: 1, max: 1, itens: [{ nome: 'Sábado, 7h (10 vagas)' }, { nome: 'Domingo, 7h (6 vagas)' }, { nome: 'Quarta, 7h (12 vagas)' }] },
+            { titulo: 'Embarque', min: 1, max: 1, itens: [{ nome: 'Hotel na orla' }, { nome: 'Ponto de encontro no centro' }] },
+            { titulo: 'Extras', min: 0, max: 2, itens: [{ nome: 'Almoço incluso', preco: 45 }, { nome: 'Fotos profissionais', preco: 30 }] }
+          ] },
+        { nome: 'Day use em praia', descricao: 'Transporte ida e volta e cadeira com guarda-sol na barraca parceira.', duracao_min: 30, preco: 90, categoria: 'Praias e dunas', figura: 'praia', cor: '#0ea5e9',
+          opcoes: [{ titulo: 'Data de saída', min: 1, max: 1, itens: [{ nome: 'Sábado, 8h (14 vagas)' }, { nome: 'Domingo, 8h (8 vagas)' }] }] },
+        { nome: 'Trilha e cachoeira na serra', descricao: 'Trilha leve de 4 km com guia, banho de cachoeira e café regional.', duracao_min: 30, preco: 140, categoria: 'Serra e natureza', figura: 'serra', cor: '#2f9e44',
+          opcoes: [
+            { titulo: 'Data de saída', min: 1, max: 1, itens: [{ nome: 'Sábado, 6h (12 vagas)' }, { nome: 'Domingo, 6h (12 vagas)' }] },
+            { titulo: 'Extras', min: 0, max: 1, itens: [{ nome: 'Almoço regional', preco: 40 }] }
+          ] },
+        { nome: 'City tour histórico', descricao: 'Centro histórico, mercado e museus, em van climatizada com guia.', duracao_min: 30, preco: 70, categoria: 'City tour', figura: 'cidade', cor: '#7c3aed',
+          opcoes: [{ titulo: 'Horário', min: 1, max: 1, itens: [{ nome: 'Manhã, 9h' }, { nome: 'Tarde, 14h' }] }] },
+        { nome: 'Pacote fim de semana na praia', descricao: '2 diárias em pousada com café da manhã, transporte e 1 passeio de buggy.', duracao_min: 30, preco: 690, categoria: 'Pacotes com hospedagem', selo: 'Promoção', figura: 'mala', cor: '#2563eb',
+          opcoes: [{ titulo: 'Acomodação', min: 1, max: 1, itens: [{ nome: 'Quarto duplo' }, { nome: 'Quarto triplo' }, { nome: 'Quarto individual', preco: 180 }] }] }
+      ],
+      portfolio: []
     }
   };
 
@@ -155,6 +230,8 @@
 
   /* Busca o modelo de um negócio (inclusive de nicho oculto, para quem já usa) */
   window.nichoPorId = (id) => window.NICHOS[id] || window.NICHOS_OCULTOS[id] || window.NICHOS.salao;
+  /* Nichos de pedido usam cardápio/vitrine (loja.html) em vez de agenda */
+  window.ehPedido = (id) => window.nichoPorId(id).modo === 'pedido';
 
   /* Cores da SUA marca (página de vendas e painel) */
   window.TEMA_PRODUTO = null; /* a marca MinhaAgenda usa as cores padrão de src/app.css */

@@ -9,7 +9,10 @@
   const S = { user: null, neg: null, papel: 'dono', meuProf: null, profs: [], servicos: [], aba: U.lsGet('aba', 'inicio'), dia: isoDate(new Date()), filtroProf: '' };
   let conviteURL = new URLSearchParams(location.search).get('convite');   // link de convite de profissional
   const fuso = () => S.neg?.fuso || 'America/Sao_Paulo';
-  const linkPublico = () => new URL(`agendar.html?n=${S.neg.slug}`, location.href).href;
+  /* Nichos de pedido (marmitaria, passeios...) têm cardápio/pacotes em vez de agenda */
+  const pedido = () => !!S.neg && ehPedido(S.neg.nicho);
+  const L = () => nichoPorId(S.neg.nicho).loja;
+  const linkPublico = () => new URL(`${pedido() ? 'loja' : 'agendar'}.html?n=${S.neg.slug}`, location.href).href;
   const mostrar = (id) => ['v-carregando', 'v-auth', 'v-app'].forEach((v) => $(`#${v}`).classList.toggle('hidden', v !== id));
   const confirma = (msg) => window.confirm(msg);
 
@@ -47,6 +50,12 @@
       case 'number': return `<label class="label">${c.r}<input ${base} type="number" class="input" min="${c.min ?? 0}" max="${c.max ?? 99999}" step="${c.step || 1}" value="${esc(val)}"></label>`;
       case 'money': return `<label class="label">${c.r}<input ${base} type="number" class="input" min="0" step="0.01" value="${esc(val)}"><small>Use 0 para mostrar "Grátis".</small></label>`;
       case 'bool': return `<label class="flex items-center gap-3 text-sm font-medium"><input type="checkbox" name="${c.k}" class="w-5 h-5 accent-[rgb(var(--c-brand))]" ${val ? 'checked' : ''}>${c.r}</label>`;
+      case 'moneyopc': return `<label class="label">${c.r}<input name="${c.k}" type="number" class="input" min="0" step="0.01" value="${v == null ? '' : esc(v)}">${c.dica ? `<small>${c.dica}</small>` : ''}</label>`;
+      case 'opcoes': return `<label class="label">${c.r}<textarea name="${c.k}" rows="8" class="input font-mono text-sm" spellcheck="false" placeholder="${esc(c.ph || '')}">${esc(opcoesParaTexto(v))}</textarea><small>${c.dica || ''}</small></label>`;
+      case 'foto': return `<div class="grid gap-2"><p class="text-sm font-semibold">${c.r}</p>
+        <div class="flex items-center gap-3">${v ? `<img src="${esc(v)}" alt="" class="h-16 w-16 shrink-0 rounded-xl object-cover border border-line">` : '<span class="grid h-16 w-16 shrink-0 place-items-center rounded-xl border border-dashed border-line text-xs text-muted">Sem foto</span>'}
+        <input type="file" name="${c.k}_arquivo" accept="image/*" class="min-w-0 text-sm"></div>
+        ${v ? `<label class="flex items-center gap-2 text-sm"><input type="checkbox" name="${c.k}_remover" class="w-4 h-4">Remover a foto</label>` : ''}<small class="text-muted">${c.dica || 'A foto é reduzida automaticamente.'}</small></div>`;
       default: return `<label class="label">${c.r}<input ${base} class="input" maxlength="${c.max || 80}" value="${esc(val)}" ${c.ph ? `placeholder="${esc(c.ph)}"` : ''}>${c.dica ? `<small>${c.dica}</small>` : ''}</label>`;
     }
   }
@@ -54,12 +63,64 @@
     const out = {};
     campos.forEach((c) => {
       const el = form.elements[c.k];
+      if (c.t === 'foto') return;                       /* tratado em antesSalvar (envio do arquivo) */
       if (c.t === 'bool') out[c.k] = el.checked;
+      else if (c.t === 'moneyopc') out[c.k] = el.value === '' ? null : Number(el.value);
+      else if (c.t === 'opcoes') out[c.k] = textoParaOpcoes(el.value);
       else if (c.t === 'number' || c.t === 'money') out[c.k] = el.value === '' ? (c.padrao ?? 0) : Number(el.value);
       else out[c.k] = el.value.trim();
       if (c.req && (out[c.k] === '' || out[c.k] === null)) throw new Error(`Preencha "${c.r}".`);
     });
     return out;
+  }
+
+  /* Escolhas de um item (proteínas, guarnições, datas de saída...) em texto simples:
+       Proteína (escolha 1)
+       - Frango grelhado
+       - Peixe frito + 3,00
+       Guarnições (escolha de 1 a 3)
+       - Arroz
+       Adicionais (até 2)          ← opcional
+       - Ovo frito + 2,00                                                  */
+  const precoTxt = (n) => Number(n).toFixed(2).replace('.', ',');
+  function regraTxt(g) {
+    if (g.min === 0) return g.max === 1 ? 'opcional' : `até ${g.max}`;
+    return g.min === g.max ? `escolha ${g.max}` : `escolha de ${g.min} a ${g.max}`;
+  }
+  function opcoesParaTexto(grupos) {
+    if (!Array.isArray(grupos) || !grupos.length) return '';
+    return grupos.map((g) => [`${g.titulo} (${regraTxt(g)})`, ...g.itens.map((o) => `- ${o.nome}${Number(o.preco) ? ` + ${precoTxt(o.preco)}` : ''}`)].join('\n')).join('\n\n');
+  }
+  function textoParaOpcoes(txt) {
+    const grupos = [];
+    String(txt || '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean).forEach((linha, i) => {
+      if (/^[-•*]/.test(linha)) {
+        const g = grupos[grupos.length - 1];
+        if (!g) throw new Error(`Linha ${i + 1}: antes dos itens com "-", escreva o nome do grupo. Ex.: Proteína (escolha 1)`);
+        const m = linha.replace(/^[-•*]\s*/, '').match(/^(.*?)(?:\s*\+\s*(?:R\$\s*)?(\d+(?:[.,]\d{1,2})?))?$/i);
+        const nome = m[1].trim().slice(0, 80);
+        if (nome) g.itens.push(m[2] ? { nome, preco: Number(m[2].replace(',', '.')) } : { nome });
+        return;
+      }
+      const r = linha.match(/^(.*?)\s*\(([^)]*)\)\s*$/);
+      const titulo = (r ? r[1] : linha).trim().slice(0, 60);
+      const regra = (r ? r[2] : 'escolha 1').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      let min = 1, max = 1, x;
+      if ((x = regra.match(/de\s*(\d+)\s*a\s*(\d+)/))) { min = +x[1]; max = +x[2]; }
+      else if ((x = regra.match(/ate\s*(\d+)/))) { min = 0; max = +x[1]; }
+      else if (/opcional/.test(regra)) { min = 0; max = 1; }
+      else if ((x = regra.match(/(\d+)/))) { min = max = +x[1]; }
+      if (!titulo) throw new Error(`Linha ${i + 1}: falta o nome do grupo.`);
+      if (max < 1 || min > max) throw new Error(`"${titulo}": a regra "(${r ? r[2] : ''})" não faz sentido.`);
+      grupos.push({ titulo, min, max, itens: [] });
+    });
+    grupos.forEach((g) => {
+      if (!g.itens.length) throw new Error(`"${g.titulo}" está sem itens. Coloque cada opção numa linha começando com "-".`);
+      if (g.min > g.itens.length) throw new Error(`"${g.titulo}" pede ${g.min} escolha(s), mas só tem ${g.itens.length} opção(ões).`);
+      g.max = Math.min(g.max, g.itens.length);
+    });
+    if (grupos.length > 8) throw new Error('Use no máximo 8 grupos de escolha por item.');
+    return grupos;
   }
 
   /* =================================================================
@@ -143,7 +204,7 @@
           <h1 class="font-display text-3xl font-bold md:text-4xl">Vamos criar a página do seu negócio</h1>
           <p class="text-muted mt-2">Escolha o tipo de negócio: já deixamos serviços, equipe e horários de exemplo para você só ajustar.</p>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
           ${Object.entries(NICHOS).map(([id, n], i) => `
             <label class="cursor-pointer">
               <input type="radio" name="nicho" value="${id}" class="peer sr-only" ${i === 0 ? 'checked' : ''}>
@@ -183,21 +244,32 @@
         if (f.slug.value.length < 3) throw new Error('O endereço do link precisa ter pelo menos 3 letras.');
         btn.disabled = true;
         const nicho = f.nicho.value, p = NICHOS[nicho];
+        const extra = p.modo === 'pedido'
+          ? { faz_entrega: p.loja.entrega, taxa_entrega: p.loja.taxa, pedido_minimo: p.loja.minimo, formas_pagamento: p.loja.pagamentos, prazo_entrega: p.loja.prazo }
+          : {};
         const { data: neg, error } = await sb.from('negocios').insert({
-          slug: f.slug.value, nome: f.nome.value.trim(), nicho, whatsapp: U.foneWa(f.whatsapp.value), cidade: f.cidade.value.trim()
+          slug: f.slug.value, nome: f.nome.value.trim(), nicho, whatsapp: U.foneWa(f.whatsapp.value), cidade: f.cidade.value.trim(), ...extra
         }).select().single();
         if (error) throw error;
         const id = neg.id;
+        /* só as colunas do banco (figura e cor são só da demonstração) */
+        const servico = (x, i) => {
+          const o = { negocio_id: id, nome: x.nome, descricao: x.descricao, duracao_min: x.duracao_min, preco: x.preco, categoria: x.categoria, ordem: i };
+          if (x.opcoes) o.opcoes = x.opcoes;
+          if (x.preco_de) o.preco_de = x.preco_de;
+          if (x.selo) o.selo = x.selo;
+          return o;
+        };
         const r = await Promise.all([
-          sb.from('profissionais').insert(p.profissionais.map((x, i) => ({ negocio_id: id, nome: x.nome, funcao: x.funcao, ordem: i }))),
-          sb.from('servicos').insert(p.servicos.map((x, i) => ({ negocio_id: id, ...x, ordem: i }))),
+          p.profissionais.length ? sb.from('profissionais').insert(p.profissionais.map((x, i) => ({ negocio_id: id, nome: x.nome, funcao: x.funcao, ordem: i }))) : { error: null },
+          sb.from('servicos').insert(p.servicos.map(servico)),
           sb.from('horarios').insert(p.horarios.map(([dia_semana, abre, fecha]) => ({ negocio_id: id, dia_semana, abre, fecha })))
         ]);
         const falha = r.find((x) => x.error);
         if (falha) toast('Negócio criado, mas parte dos exemplos não foi copiada. Cadastre pelo painel.', 'erro');
         S.aba = 'divulgar';
         await carregarNegocio();
-        toast('Página criada! Ajuste serviços, equipe e horários.');
+        toast(p.modo === 'pedido' ? `Página criada! Ajuste ${p.loja.itens}, preços e horários.` : 'Página criada! Ajuste serviços, equipe e horários.');
       } catch (ex) { err.textContent = msgErro(ex); err.classList.remove('hidden'); }
       finally { btn.disabled = false; }
     };
@@ -253,6 +325,10 @@
       ['Principal', [['inicio', 'Início', 'layout-dashboard'], ['agenda', 'Minha agenda', 'calendar-days'], ['clientes', 'Meus clientes', 'contact'], ['financeiro', 'Meus ganhos', 'wallet']]],
       ['Página', [['divulgar', 'Divulgar', 'share-2']]]
     ];
+    if (pedido()) return [
+      ['Principal', [['inicio', 'Início', 'layout-dashboard'], ['servicos', L().aba, L().icone], ['horarios', 'Horários', 'clock'], ['negocio', 'Meu negócio', 'store']]],
+      ['Sua página', [['divulgar', 'Divulgar', 'share-2']]]
+    ];
     return [
       ['Principal', [['inicio', 'Início', 'layout-dashboard'], ['agenda', 'Agenda', 'calendar-days'], ['clientes', 'Clientes', 'contact'], ['financeiro', 'Financeiro', 'wallet']]],
       ['Cadastros', [['servicos', 'Serviços', 'scissors'], ['equipe', 'Equipe', 'users'], ...(temEquipe() ? [['comissoes', 'Comissões', 'percent']] : []), ['horarios', 'Horários', 'clock'], ['folgas', 'Folgas', 'calendar-off']]],
@@ -288,7 +364,7 @@
     icons();
     if ($('#mais').open) $('#mais').close();
     window.scrollTo({ top: 0 });
-    ({ inicio: abaInicio, agenda: abaAgenda, clientes: abaClientes, financeiro: abaFinanceiro, servicos: () => abaCrud(CRUD.servicos), equipe: () => abaCrud(CRUD.equipe), comissoes: abaComissoes, horarios: abaHorarios, folgas: abaFolgas, portfolio: abaPortfolio, depoimentos: () => abaCrud(CRUD.depoimentos), negocio: abaNegocio, divulgar: abaDivulgar })[id]();
+    ({ inicio: () => (pedido() ? abaInicioLoja() : abaInicio()), agenda: abaAgenda, clientes: abaClientes, financeiro: abaFinanceiro, servicos: () => abaCrud(pedido() ? CRUD.produtos() : CRUD.servicos), equipe: () => abaCrud(CRUD.equipe), comissoes: abaComissoes, horarios: abaHorarios, folgas: abaFolgas, portfolio: abaPortfolio, depoimentos: () => abaCrud(CRUD.depoimentos), negocio: abaNegocio, divulgar: abaDivulgar })[id]();
   }
   document.addEventListener('click', (e) => { const b = e.target.closest('[data-aba]'); if (b) abrirAba(b.dataset.aba); });
 
@@ -375,6 +451,48 @@
           <div class="min-w-0 flex-1"><p class="truncate font-semibold">${esc(a.cliente_nome)}</p><p class="truncate text-xs text-muted">${esc((a.servicos || []).map((x) => x.nome).join(' + '))} · ${esc(a.profissional_nome)}</p></div>
           <span class="badge ${STATUS[a.status][1]}">${STATUS[a.status][0]}</span>
         </div>`).join('') : vazio('Nenhum agendamento hoje.')}</div>`;
+    icons();
+  }
+
+  /* Início dos nichos de pedido (marmitaria, passeios...): link, resumo e atalhos */
+  function abaInicioLoja() {
+    const l = L(), n = S.neg, link = linkPublico(), hoje = isoDate(new Date());
+    const ativos = S.servicos.filter((s) => s.ativo), fora = S.servicos.length - ativos.length;
+    const cats = new Set(ativos.map((s) => s.categoria || 'Outros')).size;
+    $('#conteudo').innerHTML = avisoSuspenso() + `
+      <p class="text-sm font-semibold text-muted capitalize">${esc(dataLonga(hoje))}</p>
+      <h1 class="mt-1 font-display text-3xl font-bold md:text-4xl">${saudacao()}.</h1>
+      <div class="mt-6 grid gap-4 lg:grid-cols-[1.3fr_1fr]">
+        <div class="rounded-panel bg-brand p-6 text-brand-contrast">
+          <p class="text-sm font-semibold opacity-80">Sua página de ${esc(l.aba.toLowerCase())}</p>
+          <p class="mt-2 font-display text-2xl font-bold [overflow-wrap:anywhere]">${esc(link.replace(/^https?:\/\//, ''))}</p>
+          <p class="mt-1 opacity-90">${n.ativo ? `Os ${esc(l.itens)} chegam no WhatsApp ${esc(mascaraFone(String(n.whatsapp).replace(/^55(?=\d{10,11}$)/, '')))}.` : 'Página pausada: ninguém consegue fazer pedido agora. Reative em Meu negócio.'}</p>
+          <div class="mt-5 flex flex-wrap gap-2">
+            <button type="button" data-copiar="${esc(link)}" class="btn btn-sm bg-brand-contrast text-brand"><i data-lucide="copy" class="h-4 w-4"></i>Copiar link</button>
+            <a href="${esc(link)}" target="_blank" rel="noopener" class="btn btn-sm border border-current/30"><i data-lucide="external-link" class="h-4 w-4"></i>Abrir minha página</a>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="card p-4"><p class="text-xs font-semibold text-muted">Disponíveis</p><p class="mt-1 font-display text-3xl font-bold">${ativos.length}</p><p class="text-xs text-muted">${esc(l.itens)} na página</p></div>
+          <div class="card p-4"><p class="text-xs font-semibold text-muted">Indisponíveis</p><p class="mt-1 font-display text-3xl font-bold ${fora ? 'text-warn' : ''}">${fora}</p><p class="text-xs text-muted">escondidos agora</p></div>
+          <div class="card p-4"><p class="text-xs font-semibold text-muted">Categorias</p><p class="mt-1 font-display text-3xl font-bold">${cats}</p><p class="text-xs text-muted">abas da página</p></div>
+          <div class="card p-4"><p class="text-xs font-semibold text-muted">Entrega</p><p class="mt-1 font-display text-2xl font-bold">${n.faz_entrega ? (Number(n.taxa_entrega) ? reais(n.taxa_entrega) : 'Grátis') : 'Não'}</p><p class="text-xs text-muted">${n.faz_entrega && Number(n.pedido_minimo) ? `mínimo ${reais(n.pedido_minimo)}` : '&nbsp;'}</p></div>
+        </div>
+      </div>
+      <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <button type="button" data-aba="servicos" class="card flex flex-col items-start gap-3 p-4 text-left hover:border-brand/50"><i data-lucide="${esc(l.icone)}" class="h-6 w-6 text-brand"></i><span class="text-sm font-bold">Editar ${esc(l.aba.toLowerCase())}</span></button>
+        <button type="button" data-aba="horarios" class="card flex flex-col items-start gap-3 p-4 text-left hover:border-brand/50"><i data-lucide="clock" class="h-6 w-6 text-brand"></i><span class="text-sm font-bold">Horários</span></button>
+        <button type="button" data-aba="negocio" class="card flex flex-col items-start gap-3 p-4 text-left hover:border-brand/50"><i data-lucide="store" class="h-6 w-6 text-brand"></i><span class="text-sm font-bold">Entrega e pagamento</span></button>
+        <button type="button" data-aba="divulgar" class="card flex flex-col items-start gap-3 p-4 text-left hover:border-brand/50"><i data-lucide="share-2" class="h-6 w-6 text-brand"></i><span class="text-sm font-bold">Divulgar</span></button>
+      </div>
+      <div class="mt-8 card p-5 text-sm">
+        <p class="font-semibold">Como funciona</p>
+        <ol class="mt-2 list-decimal pl-5 grid gap-1 text-muted">
+          <li>O cliente abre seu link, escolhe os ${esc(l.itens)} e as opções e toca em enviar.</li>
+          <li>A mensagem chega pronta no seu WhatsApp, com itens, total, nome${n.faz_entrega ? ', endereço' : ''} e forma de pagamento.</li>
+          <li>Você confirma pelo próprio WhatsApp. Acabou algum item? Em ${esc(l.aba)}, desmarque "Disponível" e ele some da página na hora.</li>
+        </ol>
+      </div>`;
     icons();
   }
 
@@ -786,6 +904,43 @@
       },
       aposSalvar: recarregarBase
     },
+    /* Itens dos nichos de pedido: pratos do cardápio, pacotes de passeio... */
+    produtos: () => {
+      const l = L(), exemplo = nichoPorId(S.neg.nicho).servicos.find((x) => x.opcoes && x.opcoes.length > 1) || {};
+      return {
+        tabela: 'servicos', titulo: l.aba,
+        texto: `Os ${l.itens} que aparecem na sua página. Cada categoria vira uma aba. Quando algo acabar, desmarque "Disponível" em vez de excluir.`,
+        fixos: { duracao_min: 30 },
+        campos: [
+          { k: 'nome', r: `Nome do ${l.item.toLowerCase()}`, req: true },
+          { k: 'descricao', r: 'Descrição curta', t: 'textarea', max: 300 },
+          { k: 'preco', r: `Preço (R$)${l.textos.unidade ? ` ${l.textos.unidade}` : ''}`, t: 'money', padrao: 0 },
+          { k: 'preco_de', r: 'Preço antigo (opcional)', t: 'moneyopc', dica: 'Aparece riscado, ao lado do preço. Deixe vazio se não estiver em promoção.' },
+          { k: 'categoria', r: 'Categoria (vira uma aba)', ph: exemplo.categoria ? `Ex.: ${exemplo.categoria}` : 'Ex.: Bebidas', max: 40, req: true },
+          { k: 'selo', r: 'Etiqueta (opcional)', ph: 'Ex.: Mais pedido, Promoção', max: 30 },
+          { k: 'img_url', r: 'Foto', t: 'foto' },
+          { k: 'opcoes', r: 'Escolhas do cliente (opcional)', t: 'opcoes', ph: opcoesParaTexto(exemplo.opcoes || []),
+            dica: 'Escreva o nome do grupo e a regra entre parênteses: <b>(escolha 1)</b>, <b>(escolha 2)</b>, <b>(escolha de 1 a 3)</b>, <b>(até 2)</b> ou <b>(opcional)</b>. Embaixo, uma opção por linha começando com "-". Para cobrar a mais, termine a linha com <b>+ 3,00</b>.' },
+          { k: 'ordem', r: 'Ordem na lista', t: 'number', padrao: 0 },
+          { k: 'ativo', r: 'Disponível (aparece na página)', t: 'bool', padrao: true }
+        ],
+        async antesSalvar(f, v) {
+          if (f.elements.img_url_remover?.checked) v.img_url = '';
+          const arq = f.elements.img_url_arquivo?.files?.[0];
+          if (!arq) return;
+          const blob = await reduzir(arq, 1000);
+          const caminho = `${S.neg.id}/itens/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+          const up = await sb.storage.from('portfolio').upload(caminho, blob, { contentType: 'image/jpeg', cacheControl: '31536000' });
+          if (up.error) throw up.error;
+          v.img_url = sb.storage.from('portfolio').getPublicUrl(caminho).data.publicUrl;
+        },
+        linha: (s) => `<div class="flex gap-3">${s.img_url ? `<img src="${esc(s.img_url)}" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" loading="lazy">` : ''}<div class="min-w-0">
+          <p class="font-semibold">${esc(s.nome)}${s.ativo ? '' : ' <span class="text-xs text-warn">(indisponível)</span>'}${s.selo ? ` <span class="badge bg-accent text-ink">${esc(s.selo)}</span>` : ''}</p>
+          <p class="text-sm text-muted">${brl(s.preco)}${s.preco_de ? ` <s>${brl(s.preco_de)}</s>` : ''}${s.categoria ? ` · ${esc(s.categoria)}` : ''}</p>
+          ${(s.opcoes || []).length ? `<p class="mt-1 text-xs text-muted">Escolhas: ${esc(s.opcoes.map((g) => g.titulo).join(', '))}</p>` : ''}</div></div>`,
+        aposSalvar: recarregarBase
+      };
+    },
     depoimentos: {
       tabela: 'depoimentos', titulo: 'Depoimentos', texto: 'Use só depoimentos reais, com autorização da cliente. Se não houver nenhum, a seção some da página.',
       campos: [
@@ -821,9 +976,10 @@
       corpo: def.campos.map((c) => campo(c, row?.[c.k])).join(''),
       async aoSalvar(f) {
         const v = lerCampos(f, def.campos);
+        if (def.antesSalvar) await def.antesSalvar(f, v, row);
         const { error: e } = row
           ? await sb.from(def.tabela).update(v).eq('id', row.id)
-          : await sb.from(def.tabela).insert({ ...v, negocio_id: S.neg.id });
+          : await sb.from(def.tabela).insert({ ...(def.fixos || {}), ...v, negocio_id: S.neg.id });
         if (e) throw e;
         toast('Salvo.');
         if (def.aposSalvar) await def.aposSalvar();
@@ -1023,7 +1179,7 @@
   function abaNegocio() {
     const n = S.neg, p = nichoPorId(n.nicho);
     const corNicho = U.rgbParaHex(p.tema.brand);
-    $('#conteudo').innerHTML = cabecalho('Meu negócio', 'Informações que aparecem na sua página de agendamento.') + `
+    $('#conteudo').innerHTML = cabecalho('Meu negócio', `Informações que aparecem na sua página${pedido() ? '' : ' de agendamento'}.`) + `
       <form id="f-negocio" class="grid gap-4">
         <div class="card p-5 grid sm:grid-cols-2 gap-4">
           <label class="label">Nome<input name="nome" class="input" value="${esc(n.nome)}" maxlength="80" required></label>
@@ -1035,7 +1191,15 @@
           <label class="label sm:col-span-2">Link do Google Maps <small>(opcional)</small><input name="maps_url" class="input" value="${esc(n.maps_url)}" placeholder="https://maps.app.goo.gl/..." maxlength="300"></label>
           <label class="label sm:col-span-2">Texto de horário <small>(vazio = gerado automaticamente a partir da aba Horários)</small><input name="horario_texto" class="input" value="${esc(n.horario_texto)}" maxlength="120"></label>
         </div>
-        <div class="card p-5 grid gap-4">
+        ${pedido() ? `<div class="card p-5 grid sm:grid-cols-2 gap-4">
+          <p class="font-semibold sm:col-span-2">Entrega e pagamento</p>
+          <label class="flex items-center gap-3 text-sm font-medium sm:col-span-2"><input type="checkbox" name="faz_entrega" class="w-5 h-5" ${n.faz_entrega ? 'checked' : ''}>Faço entrega (sem marcar, o cliente só vê a opção de retirada)</label>
+          <label class="label">Taxa de entrega (R$)<input name="taxa_entrega" type="number" min="0" step="0.01" class="input" value="${esc(Number(n.taxa_entrega || 0))}"><small>Use 0 para entrega grátis.</small></label>
+          <label class="label">Pedido mínimo para entrega (R$)<input name="pedido_minimo" type="number" min="0" step="0.01" class="input" value="${esc(Number(n.pedido_minimo || 0))}"><small>Use 0 para não ter mínimo.</small></label>
+          <label class="label sm:col-span-2">Formas de pagamento <small>Separe por vírgula. A primeira já vem marcada para o cliente.</small><input name="formas_pagamento" class="input" maxlength="200" value="${esc(n.formas_pagamento || '')}" placeholder="${esc(L().pagamentos)}"></label>
+          <label class="label sm:col-span-2">Prazo ou aviso <small>(opcional)</small><input name="prazo_entrega" class="input" maxlength="120" value="${esc(n.prazo_entrega || '')}" placeholder="${esc(L().prazo)}"></label>
+        </div>` : ''}
+        <div class="card p-5 grid gap-4 ${pedido() ? 'hidden' : ''}">
           <p class="font-semibold">Textos do topo da página <span class="text-sm font-normal text-muted">(vazio = texto padrão do nicho)</span></p>
           <label class="label">Selo<input name="hero_selo" class="input" value="${esc(n.hero_selo || '')}" placeholder="${esc(p.hero.selo)}" maxlength="60"></label>
           <label class="label">Título <small>Coloque *entre asteriscos* a parte que fica colorida.</small><input name="hero_titulo" class="input" value="${esc(n.hero_titulo || '')}" placeholder="${esc(p.hero.titulo)}" maxlength="90"></label>
@@ -1052,7 +1216,7 @@
             <input name="slug" class="input" value="${esc(n.slug)}" maxlength="60" data-mascara="slug">
             <p class="text-xs text-warn">Atenção: mudar isso quebra o link antigo (bio, QR Code impresso).</p>
           </div>
-          <label class="flex items-center gap-3 text-sm font-medium sm:col-span-2"><input type="checkbox" name="ativo" class="w-5 h-5" ${n.ativo ? 'checked' : ''}>Página no ar (desmarque para pausar os agendamentos)</label>
+          <label class="flex items-center gap-3 text-sm font-medium sm:col-span-2"><input type="checkbox" name="ativo" class="w-5 h-5" ${n.ativo ? 'checked' : ''}>Página no ar (desmarque para pausar ${pedido() ? 'os pedidos' : 'os agendamentos'})</label>
           <div class="sm:col-span-2 rounded-xl bg-page border border-line p-3 text-sm flex flex-wrap items-center justify-between gap-2">
             <p>Seu plano: <b>${PLANOS[n.plano] || n.plano}</b>${n.plano === 'essencial' ? ' · 1 profissional' : n.plano === 'equipe' ? ' · até 6 profissionais com login individual e comissões' : ' · profissionais ilimitados'}</p>
             <a href="${waLink(CONFIG.produto.whatsapp, `Olá! Quero mudar o plano do ${n.nome}.`)}" target="_blank" rel="noopener" class="text-brand underline">Mudar de plano</a>
@@ -1071,6 +1235,13 @@
         hero_selo: f.hero_selo.value.trim() || null, hero_titulo: f.hero_titulo.value.trim() || null, hero_subtitulo: f.hero_subtitulo.value.trim() || null,
         cor_principal: f.usar_cor.checked ? f.cor.value : null, slug: f.slug.value, ativo: f.ativo.checked
       };
+      if (pedido()) Object.assign(v, {
+        faz_entrega: f.faz_entrega.checked, taxa_entrega: Math.max(0, Number(f.taxa_entrega.value) || 0), pedido_minimo: Math.max(0, Number(f.pedido_minimo.value) || 0),
+        formas_pagamento: f.formas_pagamento.value.split(',').map((x) => x.trim()).filter(Boolean).join(', ') || L().pagamentos, prazo_entrega: f.prazo_entrega.value.trim()
+      });
+      if (ehPedido(v.nicho) !== pedido() && !confirma(ehPedido(v.nicho)
+        ? 'Mudar para este tipo troca a agenda por um cardápio/vitrine com pedido no WhatsApp. Seus serviços viram itens. Continuar?'
+        : 'Mudar para este tipo troca o cardápio/vitrine por agenda de horários. Continuar?')) return;
       if (v.nome.length < 2) return toast('Informe o nome.', 'erro');
       if (v.maps_url && !/^https:\/\//i.test(U.urlSegura(v.maps_url))) return toast('O link do mapa precisa começar com https:// (copie do Google Maps em "Compartilhar").', 'erro');
       v.instagram = U.instagramUser(v.instagram);
@@ -1096,13 +1267,20 @@
       qrSvg = qr.createSvgTag({ cellSize: 6, margin: 2, scalable: true });
       qrPng = qr.createDataURL(10, 4);
     }
-    const textos = [
+    const emo = nichoPorId(S.neg.nicho).emoji;
+    const textos = pedido() ? [
+      ['Bio do Instagram', `${emo} ${L().chamada}\n👇 ${link}`],
+      ['Mensagem de saudação do WhatsApp Business', `Olá! Obrigado por chamar o ${S.neg.nome} ${emo}\n\n${L().chamada}, é rápido:\n${link}\n\nSe preferir, é só mandar sua dúvida que respondemos assim que possível.`],
+      ['Mensagem de ausência (fora do horário)', `Estamos fora do horário agora, mas você já pode ${L().verTexto} por aqui: ${link}`],
+      ['Status / Stories', `${L().chamada}! ${emo} ${link}`]
+    ] : [
       ['Bio do Instagram', `✨ Agende online, 24h, sem baixar app\n👇 ${link}`],
       ['Mensagem de saudação do WhatsApp Business', `Olá! Obrigada por chamar o ${S.neg.nome} 💜\n\nPara agendar na hora, escolha serviço, dia e horário por aqui:\n${link}\n\nSe preferir, é só mandar sua dúvida que respondemos assim que possível.`],
       ['Mensagem de ausência (fora do horário)', `Estamos fora do horário agora, mas você pode garantir seu horário a qualquer momento por aqui: ${link}`],
       ['Status / Stories', `Agenda aberta! 📅 Escolha seu horário em menos de 1 minuto: ${link}`]
     ];
-    $('#conteudo').innerHTML = cabecalho('Divulgar', 'Seu link de agendamento e textos prontos para copiar.') + `
+    const ondeQr = pedido() ? 'Imprima e deixe no balcão, nas mesas, na embalagem ou no cartão de visita.' : 'Imprima e deixe no espelho, no balcão ou no cartão de visita.';
+    $('#conteudo').innerHTML = cabecalho('Divulgar', `Seu link${pedido() ? '' : ' de agendamento'} e textos prontos para copiar.`) + `
       <div class="grid lg:grid-cols-3 gap-4">
         <div class="lg:col-span-2 grid gap-4 min-w-0">
           <div class="card p-5">
@@ -1125,14 +1303,14 @@
               <li>Ative, cole o texto de saudação acima e salve.</li>
               <li>Repita em <b>Mensagem de ausência</b> com o texto de fora do horário.</li>
             </ol>
-            <p class="mt-2 text-muted">Pronto: quem chamar pela primeira vez já recebe o link para agendar.</p>
+            <p class="mt-2 text-muted">Pronto: quem chamar pela primeira vez já recebe o seu link${pedido() ? '' : ' para agendar'}.</p>
           </div>
         </div>
         <div class="card p-5 text-center self-start min-w-0">
           <p class="font-semibold">QR Code para o balcão</p>
           <div class="mx-auto mt-4 w-56 bg-white p-2 rounded-xl">${qrSvg}</div>
           ${qrPng ? `<a href="${qrPng}" download="qrcode-${esc(S.neg.slug)}.gif" class="btn btn-ghost mt-4"><i data-lucide="download" class="w-4 h-4"></i>Baixar imagem</a>` : ''}
-          <p class="text-xs text-muted mt-3">Imprima e deixe no espelho, no balcão ou no cartão de visita.</p>
+          <p class="text-xs text-muted mt-3">${ondeQr}</p>
         </div>
       </div>`;
     icons();

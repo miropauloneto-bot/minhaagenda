@@ -59,6 +59,7 @@
     const { data: n, error } = await sb.from('negocios').select(COLS_NEGOCIO).eq('slug', slug).maybeSingle();
     if (error) throw error;
     if (!n || !n.ativo) return false;
+    if (ehPedido(n.nicho)) { location.replace(`loja.html?n=${encodeURIComponent(slug)}`); return 'redirecionado'; }   /* cardápio/passeios */
     const [pr, sv, hr, pf, dp] = await Promise.all([
       sb.from('profissionais').select('id,nome,funcao').eq('negocio_id', n.id).eq('ativo', true).order('ordem').order('nome'),
       sb.from('servicos').select('id,nome,descricao,duracao_min,preco,categoria').eq('negocio_id', n.id).eq('ativo', true).order('ordem').order('nome'),
@@ -569,10 +570,13 @@
     try {
       if (demoId) {
         if (!NICHOS[demoId]) return falhar('Demonstração não encontrada', 'Escolha um dos tipos de negócio na página inicial.');
+        if (ehPedido(demoId)) return location.replace(`loja.html?demo=${encodeURIComponent(demoId)}`);
         deDemo(demoId);
       } else if (slug) {
         if (!U.configurado()) return falhar('Sistema ainda não configurado', 'Preencha o endereço e a chave do Supabase em config.js.');
-        if (!(await doBanco())) return falhar('Página não encontrada', 'Este negócio não existe ou está temporariamente fora do ar.');
+        const r = await doBanco();
+        if (r === 'redirecionado') return;
+        if (!r) return falhar('Página não encontrada', 'Este negócio não existe ou está temporariamente fora do ar.');
       } else {
         return falhar('Qual negócio?', 'Abra o link que o estabelecimento enviou para você.');
       }
