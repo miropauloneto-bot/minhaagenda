@@ -7,7 +7,7 @@
 (() => {
   'use strict';
 
-  const LOJA = {
+  const LOJA = window.LOJA_DADOS || {
     nome: 'Studio Bella',
     sigla: 'SB',                         // aparece no quadrado do logo
     capa: ['Studio', 'Bella', 'loja do salão'],
@@ -51,6 +51,12 @@
     ]
   };
 
+  /* textos que mudam conforme o tipo de loja (podem vir em LOJA.textos) */
+  const T = Object.assign({ sacola: 'sacola', retirada: 'Retirar no salão', obs: 'Ex.: embrulhar para presente', origem: 'vitrine' }, LOJA.textos || {});
+  if (LOJA.cor) { const h = LOJA.cor.replace('#', ''); document.documentElement.style.setProperty('--brand', [0, 2, 4].map((i) => parseInt(h.substr(i, 2), 16)).join(' ')); }
+  /* grupos de escolha: aceita "opcoes" (uma escolha) ou "grupos" (várias, com mínimo e máximo) */
+  const gruposDe = (p) => p.grupos || (p.opcoes ? [{ titulo: p.opcoes.titulo, min: p.opcoes.obrigatorio ? 1 : 0, max: 1, itens: p.opcoes.itens }] : []);
+
   /* ---------------- utilidades ---------------- */
   const $ = (s, el = document) => el.querySelector(s);
   const slot = (n) => $(`[data-slot="${n}"]`);
@@ -83,6 +89,11 @@
       esmalte: `<rect x="86" y="28" width="28" height="60" rx="6" fill="#1b1a3d"/><rect x="62" y="84" width="76" height="86" rx="20" fill="${c}"/><rect x="72" y="94" width="10" height="62" rx="5" ${brilho}/>`,
       oleo: `<circle cx="100" cy="40" r="14" fill="#1b1a3d"/><rect x="92" y="46" width="16" height="22" fill="#1b1a3d"/><rect x="72" y="66" width="56" height="104" rx="14" fill="${c}" opacity=".9"/><rect x="82" y="100" width="36" height="38" rx="6" fill="#fff" opacity=".85"/><rect x="78" y="74" width="7" height="86" rx="3.5" ${brilho}/>`,
       kit: `<rect x="40" y="80" width="120" height="90" rx="12" fill="${c}"/><rect x="36" y="66" width="128" height="24" rx="8" fill="${c}"/><rect x="94" y="66" width="12" height="104" fill="#fff" opacity=".8"/><path d="M100 66c-14-26-40-22-32-6 6 10 32 6 32 6Zm0 0c14-26 40-22 32-6-6 10-32 6-32 6Z" fill="#fff" opacity=".9"/>`,
+      marmita: `<rect x="34" y="78" width="132" height="84" rx="14" fill="#fff"/><rect x="40" y="84" width="58" height="72" rx="8" fill="#f4e3b5"/><rect x="104" y="84" width="56" height="34" rx="8" fill="#8a4b2a"/><rect x="104" y="122" width="56" height="34" rx="8" fill="#6aa84f"/><circle cx="58" cy="102" r="5" fill="#fff" opacity=".8"/><circle cx="76" cy="118" r="4" fill="#fff" opacity=".8"/><circle cx="62" cy="136" r="4" fill="#fff" opacity=".8"/><rect x="28" y="66" width="144" height="16" rx="8" fill="${c}" opacity=".85"/>`,
+      tigela: `<path d="M38 100h124c0 40-28 66-62 66s-62-26-62-66Z" fill="#fff"/><path d="M38 100h124" stroke="${c}" stroke-width="6"/><ellipse cx="100" cy="96" rx="58" ry="16" fill="${c}"/><circle cx="80" cy="90" r="6" fill="#fff" opacity=".5"/><circle cx="112" cy="92" r="5" fill="#fff" opacity=".5"/><circle cx="96" cy="84" r="4" fill="#fff" opacity=".5"/>`,
+      carne: `<ellipse cx="100" cy="150" rx="70" ry="16" fill="#fff"/><path d="M58 128c-6-30 20-58 52-56 30 2 48 26 40 52-6 18-26 26-48 24-22-2-40-6-44-20Z" fill="${c}"/><path d="M76 110c14-8 34-10 52-2M74 126c18-6 38-6 56 0" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".45" fill="none"/>`,
+      lata: `<rect x="70" y="44" width="60" height="124" rx="12" fill="${c}"/><rect x="72" y="40" width="56" height="10" rx="5" fill="#cfd3dc"/><rect x="72" y="162" width="56" height="8" rx="4" fill="#cfd3dc"/><rect x="70" y="86" width="60" height="34" fill="#fff" opacity=".85"/><rect x="78" y="54" width="7" height="100" rx="3.5" fill="#fff" opacity=".4"/>`,
+      garrafa: `<rect x="90" y="26" width="20" height="14" rx="3" fill="#1b1a3d"/><path d="M90 40h20v16c0 10 22 16 22 36v70a10 10 0 0 1-10 10H78a10 10 0 0 1-10-10V92c0-20 22-26 22-36Z" fill="${c}" opacity=".9"/><rect x="68" y="108" width="64" height="34" fill="#fff" opacity=".85"/><rect x="76" y="96" width="7" height="70" rx="3.5" fill="#fff" opacity=".4"/>`,
       vale: `<rect x="30" y="60" width="140" height="88" rx="14" fill="${c}"/><circle cx="30" cy="104" r="12" fill="#f7f6fd"/><circle cx="170" cy="104" r="12" fill="#f7f6fd"/><text x="100" y="98" text-anchor="middle" font-family="Bricolage Grotesque,system-ui" font-weight="800" font-size="20" fill="#fff">VALE</text><text x="100" y="122" text-anchor="middle" font-family="Manrope,system-ui" font-weight="700" font-size="12" fill="#fff" opacity=".75">PRESENTE</text>`
     };
     return `<svg viewBox="0 0 200 200" preserveAspectRatio="xMidYMid ${inteira ? 'meet' : 'slice'}" aria-hidden="true">${fundo}${f[tipo] || ''}</svg>`;
@@ -124,7 +135,7 @@
       <span class="item-txt">
         <span class="item-nome">${esc(p.nome)}</span>
         ${p.desc ? `<span class="item-desc">${esc(p.desc)}</span>` : ''}
-        <span class="preco">${p.opcoes && p.opcoes.itens.some((o) => o.preco) ? 'A partir de ' : ''}${brl(p.preco)}${p.de ? `<s>${brl(p.de)}</s>` : ''}</span>
+        <span class="preco">${gruposDe(p).some((g) => g.itens.some((o) => o.preco)) ? 'A partir de ' : ''}${brl(p.preco)}${p.de ? `<s>${brl(p.de)}</s>` : ''}</span>
         ${p.selo ? `<span class="selo">${esc(p.selo)}</span>` : ''}
       </span>
       ${temFoto ? `<span class="foto">${visual(p)}<span class="mais" aria-hidden="true">${icone.mais}</span></span>` : `<span class="mais" aria-hidden="true">${icone.mais}</span>`}
@@ -189,34 +200,44 @@
   let atual = null;
   function abrirProduto(id) {
     const p = LOJA.produtos.find((x) => x.id === id); if (!p) return;
-    atual = { p, qtd: 1, opcao: null };
-    const op = p.opcoes;
+    const grupos = gruposDe(p);
+    atual = { p, qtd: 1, grupos, marcados: grupos.map(() => new Set()) };
+    const regra = (g) => g.max === 1 ? (g.min ? 'Escolha 1' : 'Opcional') : g.min && g.min === g.max ? `Escolha ${g.max}` : g.min ? `Escolha de ${g.min} a ${g.max}` : `Até ${g.max}`;
+    const blocos = grupos.map((g, gi) => `<div class="bloco"><p class="bloco-titulo"><span>${esc(g.titulo)}<br><small style="font-weight:600;color:rgb(var(--muted))">${regra(g)}</small></span>${g.min ? '<em>Obrigatório</em>' : ''}</p>
+        ${g.itens.map((o, i) => `<label class="opcao"><span>${o.cor ? `<span style="display:inline-block;width:.9rem;height:.9rem;border-radius:50%;background:${esc(o.cor)};vertical-align:-2px;margin-right:.5rem;border:1px solid rgb(0 0 0/.1)"></span>` : ''}${esc(o.nome)}${o.preco ? ` <small>+ ${brl(o.preco)}</small>` : ''}</span><input type="${g.max === 1 ? 'radio' : 'checkbox'}" name="g${gi}" data-grupo="${gi}" value="${i}"></label>`).join('')}</div>`).join('');
     const corpo = `
       ${p.foto || p.figura ? `<div class="produto-foto">${visual(p, true)}</div>` : ''}
       <h4 class="produto-nome">${esc(p.nome)}</h4>
       ${p.desc ? `<p class="produto-desc">${esc(p.desc)}</p>` : ''}
       <p class="preco">${brl(p.preco)}${p.de ? `<s>${brl(p.de)}</s>` : ''}</p>
-      ${op ? `<div class="bloco"><p class="bloco-titulo"><span>${esc(op.titulo)}</span>${op.obrigatorio ? '<em>Obrigatório</em>' : ''}</p>
-        ${op.itens.map((o, i) => `<label class="opcao"><span>${o.cor ? `<span style="display:inline-block;width:.9rem;height:.9rem;border-radius:50%;background:${esc(o.cor)};vertical-align:-2px;margin-right:.5rem;border:1px solid rgb(0 0 0/.1)"></span>` : ''}${esc(o.nome)}${o.preco ? ` <small>+ ${brl(o.preco)}</small>` : ''}</span><input type="radio" name="opcao" value="${i}"></label>`).join('')}</div>` : ''}
+      ${blocos}
       <label class="rotulo" for="obs">Alguma observação?</label>
-      <textarea id="obs" rows="2" maxlength="140" placeholder="Ex.: embrulhar para presente"></textarea>`;
+      <textarea id="obs" rows="2" maxlength="140" placeholder="${esc(T.obs)}"></textarea>`;
     const pe = `<div class="linha-acao">
       <div class="passo"><button type="button" data-acao="qtd-menos" aria-label="Diminuir">${icone.menos}</button><output data-slot="p-qtd">1</output><button type="button" data-acao="qtd-mais" aria-label="Aumentar">${icone.mais}</button></div>
       <button type="button" class="btn btn-primary" data-acao="adicionar"><span>Adicionar</span><span data-slot="p-total"></span></button></div>`;
-    abrirFolha('Adicionar à sacola', corpo, pe);
+    abrirFolha(`Adicionar ${T.sacola === 'carrinho' ? 'ao carrinho' : 'à ' + T.sacola}`, corpo, pe);
     atualizarProduto();
   }
-  function unitario() { const o = atual.opcao != null ? atual.p.opcoes.itens[atual.opcao] : null; return atual.p.preco + (o && o.preco ? o.preco : 0); }
+  function escolhidos() { return atual.grupos.flatMap((g, gi) => [...atual.marcados[gi]].sort((x, y) => x - y).map((i) => g.itens[i])); }
+  function unitario() { return atual.p.preco + escolhidos().reduce((a, o) => a + (o.preco || 0), 0); }
+  function marcar(gi, i, ligado, input) {
+    const g = atual.grupos[gi]; const set = atual.marcados[gi];
+    if (g.max === 1) { set.clear(); if (ligado) set.add(i); }
+    else if (ligado) { if (set.size >= g.max) { input.checked = false; avisar(`Máximo de ${g.max} em “${g.titulo}”`); return; } set.add(i); }
+    else set.delete(i);
+    atualizarProduto();
+  }
   function atualizarProduto() {
     slot('p-qtd').textContent = atual.qtd;
     slot('p-total').textContent = brl(unitario() * atual.qtd);
     $('[data-acao="qtd-menos"]').disabled = atual.qtd <= 1;
-    const falta = atual.p.opcoes && atual.p.opcoes.obrigatorio && atual.opcao == null;
+    const falta = atual.grupos.some((g, gi) => atual.marcados[gi].size < (g.min || 0));
     $('[data-acao="adicionar"]').disabled = falta;
   }
   function adicionar() {
     const obs = ($('#obs') || {}).value ? $('#obs').value.trim() : '';
-    const op = atual.opcao != null ? atual.p.opcoes.itens[atual.opcao].nome : '';
+    const op = atual.grupos.map((g, gi) => { const n = [...atual.marcados[gi]].sort((x, y) => x - y).map((i) => g.itens[i].nome); return n.length ? (atual.grupos.length > 1 ? `${g.titulo}: ${n.join(', ')}` : n.join(', ')) : ''; }).filter(Boolean).join(' · ');
     const chave = [atual.p.id, op, obs].join('|');
     const linha = sacola.get(chave) || { p: atual.p, opcao: op, obs, qtd: 0, unit: unitario() };
     linha.qtd += atual.qtd; sacola.set(chave, linha);
@@ -245,7 +266,7 @@
       ${LOJA.entrega ? `<p class="rotulo">Como prefere receber?</p>
       <div class="segmento" role="radiogroup">
         <label><input type="radio" name="modo" value="entrega" ${pedido.modo === 'entrega' ? 'checked' : ''}><span>Entrega</span></label>
-        <label><input type="radio" name="modo" value="retirada" ${pedido.modo === 'retirada' ? 'checked' : ''}><span>Retirar no salão</span></label>
+        <label><input type="radio" name="modo" value="retirada" ${pedido.modo === 'retirada' ? 'checked' : ''}><span>${esc(T.retirada)}</span></label>
       </div>` : ''}
       <label class="rotulo" for="ped-nome">Seu nome</label>
       <input class="campo" id="ped-nome" data-campo="nome" autocomplete="given-name" maxlength="60" value="${esc(pedido.nome)}" placeholder="Como a loja deve te chamar">
@@ -262,8 +283,8 @@
       <div class="totais" data-slot="totais"></div>
       <p class="aviso">${icone.escudo}<span>Seus dados vão só na mensagem do WhatsApp para a loja. Este site não grava nome, endereço nem pedido.</span></p>`;
     const pe = `<button type="button" class="btn btn-wa" data-acao="enviar">${icone.wa}<span>Enviar pedido no WhatsApp</span></button>`;
-    if (slot('folha').hidden) abrirFolha('Sua sacola', corpo, pe);
-    else { slot('folha-titulo').textContent = 'Sua sacola'; slot('folha-corpo').innerHTML = corpo; slot('folha-pe').innerHTML = pe; slot('folha-pe').hidden = false; }
+    if (slot('folha').hidden) abrirFolha(T.sacola === 'sacola' ? 'Sua sacola' : 'Seu ' + T.sacola, corpo, pe);
+    else { slot('folha-titulo').textContent = T.sacola === 'sacola' ? 'Sua sacola' : 'Seu ' + T.sacola; slot('folha-corpo').innerHTML = corpo; slot('folha-pe').innerHTML = pe; slot('folha-pe').hidden = false; }
     atualizarTotais();
   }
   function atualizarTotais() {
@@ -280,15 +301,15 @@
     const taxa = pedido.modo === 'entrega' ? LOJA.taxaEntrega : 0;
     const linhas = [...sacola.values()].map((l) => `• ${l.qtd}x ${l.p.nome}${l.opcao ? ` (${l.opcao})` : ''} — ${brl(l.unit * l.qtd)}${l.obs ? `\n   Obs.: ${l.obs}` : ''}`);
     return [
-      `Olá, ${LOJA.nome}! Quero fazer um pedido pela vitrine:`, '',
+      `Olá, ${LOJA.nome}! Quero fazer um pedido pel${T.origem === 'vitrine' ? 'a' : 'o'} ${T.origem}:`, '',
       ...linhas, '',
       `Subtotal: ${brl(subtotal())}`,
-      pedido.modo === 'entrega' ? `Entrega: ${taxa ? brl(taxa) : 'grátis'}` : 'Vou retirar no salão',
+      pedido.modo === 'entrega' ? `Entrega: ${taxa ? brl(taxa) : 'grátis'}` : `Vou ${T.retirada.charAt(0).toLowerCase()}${T.retirada.slice(1)}`,
       `*Total: ${brl(subtotal() + taxa)}*`, '',
-      pedido.nome.trim() ? `Nome: ${pedido.nome.trim()}` : '',
-      pedido.modo === 'entrega' ? `Endereço: ${pedido.endereco.trim()}` : '',
+      pedido.nome.trim() ? `Nome: ${pedido.nome.trim()}` : null,
+      pedido.modo === 'entrega' ? `Endereço: ${pedido.endereco.trim()}` : null,
       `Pagamento: ${pedido.pagamento}${/dinheiro/i.test(pedido.pagamento) && pedido.troco.trim() ? ` (troco para R$ ${pedido.troco.trim()})` : ''}`
-    ].filter((l, i, arr) => l !== '' || arr[i - 1] !== '').join('\n');
+    ].filter((l) => l !== null).join('\n');
   }
   function enviar() {
     const url = `https://wa.me/${LOJA.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(mensagem())}`;
@@ -345,7 +366,7 @@
   slot('fundo').addEventListener('click', fecharFolha);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharFolha(); });
   document.addEventListener('change', (e) => {
-    if (e.target.name === 'opcao' && atual) { atual.opcao = Number(e.target.value); atualizarProduto(); }
+    if (e.target.dataset.grupo != null && atual) marcar(Number(e.target.dataset.grupo), Number(e.target.value), e.target.checked, e.target);
     if (e.target.name === 'modo') { pedido.modo = e.target.value; slot('bloco-endereco').hidden = pedido.modo !== 'entrega'; atualizarTotais(); }
     if (e.target.dataset.campo === 'pagamento') { pedido.pagamento = e.target.value; slot('bloco-troco').hidden = !/dinheiro/i.test(pedido.pagamento); }
   });
@@ -365,6 +386,7 @@
   /* ---------------- início ---------------- */
   document.title = `${LOJA.nome} · Peça pelo WhatsApp`;
   slot('nome').textContent = LOJA.nome;
+  slot('sacola-rotulo').textContent = 'Ver ' + T.sacola;
   slot('logo').textContent = LOJA.sigla;
   slot('endereco').textContent = LOJA.endereco;
   slot('capa-texto').innerHTML = `${esc(LOJA.capa[0])}<br>${esc(LOJA.capa[1])}<small>${esc(LOJA.capa[2] || '')}</small>`;
