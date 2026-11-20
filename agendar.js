@@ -68,7 +68,7 @@
     ]);
     const erro = [pr, sv, hr, pf, dp].find((r) => r.error);
     if (erro) throw erro.error;
-    const p = NICHOS[n.nicho] || NICHOS.salao;
+    const p = nichoPorId(n.nicho);
     const hs = hr.data.map((h) => ({ dia_semana: h.dia_semana, abre: h.abre.slice(0, 5), fecha: h.fecha.slice(0, 5) }));
     N = {
       demo: false, nicho: n.nicho, nome: n.nome, emoji: p.emoji, whatsapp: n.whatsapp, instagram: U.instagramUser(n.instagram),

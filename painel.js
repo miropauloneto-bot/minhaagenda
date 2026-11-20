@@ -262,7 +262,7 @@
   const todasAbas = () => abasVisiveis().flatMap(([, itens]) => itens);
   function montarApp() {
     mostrar('v-app');
-    $$('[data-slot="emoji"]').forEach((el) => { el.textContent = (NICHOS[S.neg.nicho] || NICHOS.salao).emoji; });
+    $$('[data-slot="emoji"]').forEach((el) => { el.textContent = nichoPorId(S.neg.nicho).emoji; });
     const eu = S.profs.find((p) => p.id === S.meuProf);
     $$('[data-slot="nome-negocio"]').forEach((el) => { el.textContent = S.neg.nome; });
     $('[data-slot="papel"]').textContent = S.papel === 'prof' ? `Profissional: ${eu?.nome || ''}` : `Plano ${PLANOS[S.neg.plano] || ''}`;
@@ -1021,7 +1021,7 @@
      11. MEU NEGÓCIO
      ================================================================= */
   function abaNegocio() {
-    const n = S.neg, p = NICHOS[n.nicho] || NICHOS.salao;
+    const n = S.neg, p = nichoPorId(n.nicho);
     const corNicho = U.rgbParaHex(p.tema.brand);
     $('#conteudo').innerHTML = cabecalho('Meu negócio', 'Informações que aparecem na sua página de agendamento.') + `
       <form id="f-negocio" class="grid gap-4">

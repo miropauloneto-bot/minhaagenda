@@ -79,8 +79,12 @@
         { nome: 'Massagem modeladora', descricao: 'Contorno corporal e firmeza.', duracao_min: 60, preco: 130, categoria: 'Corporal' }
       ],
       portfolio: [['Protocolo antiacne', 'Facial', '🧖‍♀️'], ['Drenagem', 'Corporal', '🌿'], ['Rejuvenescimento', 'Facial', '🧖‍♀️'], ['Modeladora', 'Corporal', '🌿'], ['Clareamento de manchas', 'Facial', '🧖‍♀️'], ['Nosso espaço', 'Corporal', '🌿']]
-    },
+    }
+  };
 
+  /* Nichos OCULTOS: não aparecem no site nem na criação de negócio.
+     Para voltar a mostrar um deles, mova o bloco para dentro de window.NICHOS acima. */
+  window.NICHOS_OCULTOS = {
     spa: {
       rotulo: 'Spas & Bem-estar', emoji: '🌿', nomeDemo: 'Spa Lótus',
       tema: { ...CLARO, bg: '250 248 243', surface: '255 254 251', sunken: '243 239 230', line: '232 226 214', text: '38 40 34', muted: '112 112 100', brand: '96 116 80', brandContrast: '255 255 255', accent: '236 229 214', fonte: 'serif' },
@@ -148,6 +152,9 @@
       portfolio: [['Fineline botânico', 'Tatuagens', '🖋️'], ['Realismo', 'Tatuagens', '🖋️'], ['Helix', 'Piercings', '💍'], ['Blackwork', 'Tatuagens', '🖋️'], ['Nosso estúdio', 'Estúdio', '🏷️'], ['Septo', 'Piercings', '💍']]
     }
   };
+
+  /* Busca o modelo de um negócio (inclusive de nicho oculto, para quem já usa) */
+  window.nichoPorId = (id) => window.NICHOS[id] || window.NICHOS_OCULTOS[id] || window.NICHOS.salao;
 
   /* Cores da SUA marca (página de vendas e painel) */
   window.TEMA_PRODUTO = null; /* a marca MinhaAgenda usa as cores padrão de src/app.css */

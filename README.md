@@ -1,6 +1,8 @@
 # MinhaAgenda — agendamento online para beleza e bem-estar
 
-Sistema completo para salões, barbearias, esmalterias, clínicas de estética, spas, lash/brow designers, consultoras e estúdios de tatuagem.
+Sistema completo para salões, barbearias, esmalterias e clínicas de estética.
+
+> Spas, lash/brow designers, consultoras e estúdios de tatuagem estão **ocultos** (em `NICHOS_OCULTOS`, no `nichos.js`). Para voltar a oferecer um deles, mova o bloco dele para dentro de `window.NICHOS`.
 
 | Página | Endereço | Para quem |
 |---|---|---|
@@ -286,7 +288,7 @@ A comissão é **gravada em cada atendimento**. Mudar a regra hoje não muda o q
 5. Mostre a aba **Divulgar**: link da bio, resposta automática do WhatsApp e QR Code.
 6. Feche: *"Eu deixo tudo cadastrado com os seus serviços hoje mesmo."*
 
-Links das demonstrações: `?demo=salao`, `barbearia`, `esmalteria`, `estetica`, `spa`, `lash`, `consultora`, `tattoo`.
+Links das demonstrações: `?demo=salao`, `barbearia`, `esmalteria`, `estetica`.
 
 ### Clientes
 A aba **Clientes** é montada sozinha a partir dos agendamentos:
