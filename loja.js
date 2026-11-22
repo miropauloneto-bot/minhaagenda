@@ -37,16 +37,16 @@ window.LOJA_ASYNC = true;
     return [...vistas.values()];
   }
 
-  /* grupos de escolha vindos do banco/nicho → formato do motor (só o que é válido) */
+  /* grupos de escolha vindos do banco/nicho → formato do motor.
+     Mantém a mesma ordem e quantidade do banco: o pedido manda as POSIÇÕES marcadas e o banco confere. */
   function gruposValidos(lista) {
     if (!Array.isArray(lista)) return [];
     return lista.map((g) => {
-      const itens = (Array.isArray(g?.itens) ? g.itens : []).filter((o) => o && String(o.nome || '').trim())
-        .map((o) => ({ nome: String(o.nome).slice(0, 80), preco: Math.max(0, Number(o.preco) || 0) }));
+      const itens = (Array.isArray(g?.itens) ? g.itens : []).map((o) => ({ nome: String(o?.nome || '—').slice(0, 80), preco: Math.max(0, Number(o?.preco) || 0) }));
       const max = Math.max(1, Math.min(Number(g?.max) || 1, itens.length || 1));
-      const min = Math.max(0, Math.min(Number(g?.min) || 0, max));
+      const min = Math.max(0, Math.min(Number(g?.min) || 0, max, itens.length));
       return { titulo: String(g?.titulo || 'Escolha').slice(0, 60), min, max, itens };
-    }).filter((g) => g.itens.length);
+    });
   }
 
   function textoDoNicho(p) {
@@ -71,7 +71,9 @@ window.LOJA_ASYNC = true;
       entrega: p.loja.entrega, taxaEntrega: p.loja.taxa, pedidoMinimo: p.loja.minimo, prazo: p.loja.prazo,
       pagamentos: p.loja.pagamentos.split(',').map((x) => x.trim()).filter(Boolean),
       horarios: horariosPorDia(p.horarios), textos: textoDoNicho(p), tituloPagina: p.hero.selo,
-      categorias: categoriasDe(produtos), produtos
+      categorias: categoriasDe(produtos), produtos,
+      /* demonstração: simula o registro do pedido (nada é gravado) */
+      salvarPedido: async () => { await new Promise((ok) => setTimeout(ok, 500)); return { numero: 1 + Math.floor(Math.random() * 40) }; }
     };
   }
 
@@ -103,7 +105,16 @@ window.LOJA_ASYNC = true;
       pagamentos: String(n.formas_pagamento || '').split(',').map((x) => x.trim()).filter(Boolean),
       horarios: horariosPorDia(hr.data.map((h) => [h.dia_semana, h.abre.slice(0, 5), h.fecha.slice(0, 5)])),
       textos: textoDoNicho(p), tituloPagina: p.hero.selo,
-      categorias: categoriasDe(produtos), produtos
+      categorias: categoriasDe(produtos), produtos,
+      /* grava o pedido no painel do negócio; o banco recalcula preços e devolve o nº do pedido */
+      async salvarPedido(x) {
+        const { data, error } = await sb.rpc('criar_pedido', {
+          p_slug: slug, p_itens: x.itens, p_nome: x.nome, p_whatsapp: x.fone, p_modo: x.modo,
+          p_endereco: x.endereco, p_pagamento: x.pagamento, p_troco: x.troco, p_obs: ''
+        });
+        if (error) throw new Error(U.msgErro(error));
+        return data;
+      }
     };
   }
 

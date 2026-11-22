@@ -326,8 +326,8 @@
       ['Página', [['divulgar', 'Divulgar', 'share-2']]]
     ];
     if (pedido()) return [
-      ['Principal', [['inicio', 'Início', 'layout-dashboard'], ['servicos', L().aba, L().icone], ['horarios', 'Horários', 'clock'], ['negocio', 'Meu negócio', 'store']]],
-      ['Sua página', [['divulgar', 'Divulgar', 'share-2']]]
+      ['Principal', [['inicio', 'Início', 'layout-dashboard'], ['pedidos', L().acao === 'reserva' ? 'Reservas' : 'Pedidos', 'bell-ring'], ['servicos', L().aba, L().icone], ['negocio', 'Meu negócio', 'store']]],
+      ['Sua página', [['horarios', 'Horários', 'clock'], ['divulgar', 'Divulgar', 'share-2']]]
     ];
     return [
       ['Principal', [['inicio', 'Início', 'layout-dashboard'], ['agenda', 'Agenda', 'calendar-days'], ['clientes', 'Clientes', 'contact'], ['financeiro', 'Financeiro', 'wallet']]],
@@ -346,6 +346,7 @@
     atualizarRotuloTema();
     if (!todasAbas().some(([k]) => k === S.aba)) S.aba = 'inicio';
     abrirAba(S.aba);
+    iniciarVigia();
   }
   function abrirAba(id) {
     S.aba = id; U.lsSet('aba', id);
@@ -364,7 +365,8 @@
     icons();
     if ($('#mais').open) $('#mais').close();
     window.scrollTo({ top: 0 });
-    ({ inicio: () => (pedido() ? abaInicioLoja() : abaInicio()), agenda: abaAgenda, clientes: abaClientes, financeiro: abaFinanceiro, servicos: () => abaCrud(pedido() ? CRUD.produtos() : CRUD.servicos), equipe: () => abaCrud(CRUD.equipe), comissoes: abaComissoes, horarios: abaHorarios, folgas: abaFolgas, portfolio: abaPortfolio, depoimentos: () => abaCrud(CRUD.depoimentos), negocio: abaNegocio, divulgar: abaDivulgar })[id]();
+    if (pedido()) setTimeout(() => vigiarPedidos(), 0);
+    ({ inicio: () => (pedido() ? abaInicioLoja() : abaInicio()), pedidos: abaPedidos, agenda: abaAgenda, clientes: abaClientes, financeiro: abaFinanceiro, servicos: () => abaCrud(pedido() ? CRUD.produtos() : CRUD.servicos), equipe: () => abaCrud(CRUD.equipe), comissoes: abaComissoes, horarios: abaHorarios, folgas: abaFolgas, portfolio: abaPortfolio, depoimentos: () => abaCrud(CRUD.depoimentos), negocio: abaNegocio, divulgar: abaDivulgar })[id]();
   }
   document.addEventListener('click', (e) => { const b = e.target.closest('[data-aba]'); if (b) abrirAba(b.dataset.aba); });
 
@@ -455,10 +457,15 @@
   }
 
   /* Início dos nichos de pedido (marmitaria, passeios...): link, resumo e atalhos */
-  function abaInicioLoja() {
+  async function abaInicioLoja() {
     const l = L(), n = S.neg, link = linkPublico(), hoje = isoDate(new Date());
     const ativos = S.servicos.filter((s) => s.ativo), fora = S.servicos.length - ativos.length;
-    const cats = new Set(ativos.map((s) => s.categoria || 'Outros')).size;
+    const r = await sb.from('pedidos').select('status,total').eq('negocio_id', n.id).eq('dia', hojeNoFuso());
+    if (S.aba !== 'inicio') return;
+    const peds = r.data || [], validos = peds.filter((p) => p.status !== 'cancelado');
+    const abertos = validos.filter((p) => p.status !== 'entregue').length;
+    const vendido = validos.reduce((t, p) => t + Number(p.total), 0);
+    const palavra = l.acao === 'reserva' ? 'Reservas' : 'Pedidos';
     $('#conteudo').innerHTML = avisoSuspenso() + `
       <p class="text-sm font-semibold text-muted capitalize">${esc(dataLonga(hoje))}</p>
       <h1 class="mt-1 font-display text-3xl font-bold md:text-4xl">${saudacao()}.</h1>
@@ -466,34 +473,161 @@
         <div class="rounded-panel bg-brand p-6 text-brand-contrast">
           <p class="text-sm font-semibold opacity-80">Sua página de ${esc(l.aba.toLowerCase())}</p>
           <p class="mt-2 font-display text-2xl font-bold [overflow-wrap:anywhere]">${esc(link.replace(/^https?:\/\//, ''))}</p>
-          <p class="mt-1 opacity-90">${n.ativo ? `Os ${esc(l.itens)} chegam no WhatsApp ${esc(mascaraFone(String(n.whatsapp).replace(/^55(?=\d{10,11}$)/, '')))}.` : 'Página pausada: ninguém consegue fazer pedido agora. Reative em Meu negócio.'}</p>
+          <p class="mt-1 opacity-90">${n.ativo ? `Os ${l.acao === 'reserva' ? 'pedidos de reserva' : 'pedidos'} entram na aba ${palavra} e o cliente também avisa no WhatsApp ${esc(mascaraFone(String(n.whatsapp).replace(/^55(?=\d{10,11}$)/, '')))}.` : 'Página pausada: ninguém consegue fazer pedido agora. Reative em Meu negócio.'}</p>
           <div class="mt-5 flex flex-wrap gap-2">
             <button type="button" data-copiar="${esc(link)}" class="btn btn-sm bg-brand-contrast text-brand"><i data-lucide="copy" class="h-4 w-4"></i>Copiar link</button>
             <a href="${esc(link)}" target="_blank" rel="noopener" class="btn btn-sm border border-current/30"><i data-lucide="external-link" class="h-4 w-4"></i>Abrir minha página</a>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-3">
-          <div class="card p-4"><p class="text-xs font-semibold text-muted">Disponíveis</p><p class="mt-1 font-display text-3xl font-bold">${ativos.length}</p><p class="text-xs text-muted">${esc(l.itens)} na página</p></div>
-          <div class="card p-4"><p class="text-xs font-semibold text-muted">Indisponíveis</p><p class="mt-1 font-display text-3xl font-bold ${fora ? 'text-warn' : ''}">${fora}</p><p class="text-xs text-muted">escondidos agora</p></div>
-          <div class="card p-4"><p class="text-xs font-semibold text-muted">Categorias</p><p class="mt-1 font-display text-3xl font-bold">${cats}</p><p class="text-xs text-muted">abas da página</p></div>
-          <div class="card p-4"><p class="text-xs font-semibold text-muted">Entrega</p><p class="mt-1 font-display text-2xl font-bold">${n.faz_entrega ? (Number(n.taxa_entrega) ? reais(n.taxa_entrega) : 'Grátis') : 'Não'}</p><p class="text-xs text-muted">${n.faz_entrega && Number(n.pedido_minimo) ? `mínimo ${reais(n.pedido_minimo)}` : '&nbsp;'}</p></div>
+          <button type="button" data-aba="pedidos" class="card p-4 text-left hover:border-brand/50"><p class="text-xs font-semibold text-muted">Em aberto agora</p><p class="mt-1 font-display text-3xl font-bold ${abertos ? 'text-brand' : ''}">${r.error ? '–' : abertos}</p><p class="text-xs text-muted">${palavra.toLowerCase()} na fila</p></button>
+          <div class="card p-4"><p class="text-xs font-semibold text-muted">${palavra} hoje</p><p class="mt-1 font-display text-3xl font-bold">${r.error ? '–' : validos.length}</p><p class="text-xs text-muted">${peds.length - validos.length ? `${peds.length - validos.length} cancelado(s)` : 'sem cancelamentos'}</p></div>
+          <div class="card p-4"><p class="text-xs font-semibold text-muted">Vendido hoje</p><p class="mt-1 font-display text-2xl font-bold text-ok">${r.error ? '–' : reais(vendido)}</p><p class="text-xs text-muted">${validos.length ? `ticket médio ${reais(vendido / validos.length)}` : '&nbsp;'}</p></div>
+          <div class="card p-4"><p class="text-xs font-semibold text-muted">${esc(l.aba)}</p><p class="mt-1 font-display text-3xl font-bold">${ativos.length}</p><p class="text-xs ${fora ? 'text-warn' : 'text-muted'}">${fora ? `${fora} indisponível(is)` : `${esc(l.itens)} no ar`}</p></div>
         </div>
       </div>
       <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <button type="button" data-aba="servicos" class="card flex flex-col items-start gap-3 p-4 text-left hover:border-brand/50"><i data-lucide="${esc(l.icone)}" class="h-6 w-6 text-brand"></i><span class="text-sm font-bold">Editar ${esc(l.aba.toLowerCase())}</span></button>
-        <button type="button" data-aba="horarios" class="card flex flex-col items-start gap-3 p-4 text-left hover:border-brand/50"><i data-lucide="clock" class="h-6 w-6 text-brand"></i><span class="text-sm font-bold">Horários</span></button>
+        <button type="button" data-aba="pedidos" class="card flex flex-col items-start gap-3 p-4 text-left hover:border-brand/50"><i data-lucide="bell-ring" class="h-6 w-6 text-brand"></i><span class="text-sm font-bold">Ver ${palavra.toLowerCase()}</span></button>
         <button type="button" data-aba="negocio" class="card flex flex-col items-start gap-3 p-4 text-left hover:border-brand/50"><i data-lucide="store" class="h-6 w-6 text-brand"></i><span class="text-sm font-bold">Entrega e pagamento</span></button>
         <button type="button" data-aba="divulgar" class="card flex flex-col items-start gap-3 p-4 text-left hover:border-brand/50"><i data-lucide="share-2" class="h-6 w-6 text-brand"></i><span class="text-sm font-bold">Divulgar</span></button>
       </div>
       <div class="mt-8 card p-5 text-sm">
         <p class="font-semibold">Como funciona</p>
         <ol class="mt-2 list-decimal pl-5 grid gap-1 text-muted">
-          <li>O cliente abre seu link, escolhe os ${esc(l.itens)} e as opções e toca em enviar.</li>
-          <li>A mensagem chega pronta no seu WhatsApp, com itens, total, nome${n.faz_entrega ? ', endereço' : ''} e forma de pagamento.</li>
-          <li>Você confirma pelo próprio WhatsApp. Acabou algum item? Em ${esc(l.aba)}, desmarque "Disponível" e ele some da página na hora.</li>
+          <li>O cliente abre seu link, escolhe os ${esc(l.itens)} e as opções, informa nome e WhatsApp e toca em enviar.</li>
+          <li>O ${l.acao} entra na aba <b class="text-ink">${palavra}</b> com número, horário, itens, total${n.faz_entrega ? ', endereço' : ''} e pagamento. O cliente também te avisa no WhatsApp.</li>
+          <li>Você avança as etapas (${esc(Object.values(l.fluxo.rotulos).filter((x) => !/cancel/i.test(x)).join(' → '))}) e manda a mensagem pronta para o cliente com um toque.</li>
+          <li>Acabou algum item? Em ${esc(l.aba)}, desmarque "Disponível" e ele some da página na hora.</li>
         </ol>
       </div>`;
     icons();
+  }
+
+  /* =================================================================
+     5b2. PEDIDOS (fila do dia dos nichos de pedido)
+     ================================================================= */
+  const hojeNoFuso = () => dataNoFuso(Date.now(), fuso());
+  const ABERTOS = ['novo', 'preparo', 'saiu', 'pronto'];
+  const COR_STATUS = { novo: 'bg-brand text-brand-contrast', preparo: 'bg-warn/15 text-warn', saiu: 'bg-accent text-ink', pronto: 'bg-accent text-ink', entregue: 'bg-ok/15 text-ok', cancelado: 'bg-bad/10 text-bad' };
+  const PD = { dia: null, filtro: 'abertos', lista: [] };
+  let timerPedidos;
+  const minutosDesde = (ts) => Math.max(0, Math.round((Date.now() - new Date(ts).getTime()) / 60000));
+  const tempoTxt = (m) => (m < 60 ? `há ${m} min` : `há ${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}`);
+  function proximoStatus(p) {
+    const etapas = L().fluxo[p.modo] || L().fluxo.retirada, i = etapas.indexOf(p.status);
+    return i >= 0 && i < etapas.length - 1 ? etapas[i + 1] : null;
+  }
+  const avisoCliente = (p, st) => String(L().fluxo.avisos[st] || '').replaceAll('{n}', p.numero).replaceAll('{nome}', String(p.cliente_nome).split(' ')[0]);
+
+  async function abaPedidos() {
+    clearInterval(timerPedidos);
+    const l = L(), palavra = l.acao === 'reserva' ? 'Reservas' : 'Pedidos';
+    PD.dia = PD.dia || hojeNoFuso();
+    const { data, error } = await sb.from('pedidos').select('*').eq('negocio_id', S.neg.id).eq('dia', PD.dia).order('criado_em');
+    if (S.aba !== 'pedidos') return;
+    if (error) { $('#conteudo').innerHTML = cabecalho(palavra, '') + vazio(esc(msgErro(error))); return; }
+    PD.lista = data;
+    const R = l.fluxo.rotulos, ehHoje = PD.dia === hojeNoFuso();
+    const validos = data.filter((p) => p.status !== 'cancelado');
+    const abertos = data.filter((p) => ABERTOS.includes(p.status));
+    const vendido = validos.reduce((t, p) => t + Number(p.total), 0);
+    const filtros = { abertos: ['Em aberto', abertos], concluidos: [R.entregue, data.filter((p) => p.status === 'entregue')], cancelados: [R.cancelado, data.filter((p) => p.status === 'cancelado')], todos: ['Todos', data] };
+    const lista = filtros[PD.filtro][1];
+    /* o que mais saiu no dia (quantidade por item) */
+    const contagem = {};
+    validos.forEach((p) => (p.itens || []).forEach((i) => { contagem[i.nome] = (contagem[i.nome] || 0) + Number(i.qtd || 0); }));
+    const top = Object.entries(contagem).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const porEtapa = (st) => data.filter((p) => p.status === st).length;
+    const etapasAbertas = [...new Set([...(l.fluxo.entrega || []), ...(l.fluxo.retirada || [])])].filter((st) => ABERTOS.includes(st));
+
+    $('#conteudo').innerHTML = cabecalho(palavra, ehHoje ? 'Fila do dia, do mais antigo para o mais novo. A lista se atualiza sozinha a cada 20 segundos.' : 'Pedidos de um dia anterior.', `
+        <div class="flex items-center gap-1">
+          <button type="button" data-acao="ped-dia" data-delta="-1" class="btn btn-ghost btn-icon" aria-label="Dia anterior"><i data-lucide="chevron-left" class="h-4 w-4"></i></button>
+          <input type="date" class="input !min-h-[2.75rem] !w-auto" value="${PD.dia}" data-acao-change="ped-data" aria-label="Dia">
+          <button type="button" data-acao="ped-dia" data-delta="1" class="btn btn-ghost btn-icon" aria-label="Próximo dia" ${ehHoje ? 'disabled' : ''}><i data-lucide="chevron-right" class="h-4 w-4"></i></button>
+        </div>`) + `
+      <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div class="card p-4"><p class="text-xs font-semibold text-muted">Em aberto</p><p class="mt-1 font-display text-3xl font-bold ${abertos.length ? 'text-brand' : ''}">${abertos.length}</p><p class="text-xs text-muted">${etapasAbertas.map((st) => `${porEtapa(st)} ${esc(R[st].toLowerCase())}`).join(' · ')}</p></div>
+        <div class="card p-4"><p class="text-xs font-semibold text-muted">${palavra} no dia</p><p class="mt-1 font-display text-3xl font-bold">${validos.length}</p><p class="text-xs text-muted">${porEtapa('entregue')} ${esc(R.entregue.toLowerCase())} · ${porEtapa('cancelado')} ${esc(R.cancelado.toLowerCase())}</p></div>
+        <div class="card p-4"><p class="text-xs font-semibold text-muted">Vendido no dia</p><p class="mt-1 font-display text-2xl font-bold text-ok">${reais(vendido)}</p><p class="text-xs text-muted">sem os cancelados</p></div>
+        <div class="card p-4"><p class="text-xs font-semibold text-muted">Ticket médio</p><p class="mt-1 font-display text-2xl font-bold">${validos.length ? reais(vendido / validos.length) : '–'}</p><p class="text-xs text-muted">${validos.filter((p) => p.modo === 'entrega').length} entrega(s) · ${validos.filter((p) => p.modo === 'retirada').length} retirada(s)</p></div>
+      </div>
+      ${top.length ? `<div class="card mt-3 p-4 text-sm"><p class="font-semibold">O que mais saiu ${ehHoje ? 'hoje' : 'no dia'}</p><div class="mt-2 flex flex-wrap gap-2">${top.map(([nome, q]) => `<span class="rounded-full bg-sunken px-3 py-1"><b>${q}×</b> ${esc(nome)}</span>`).join('')}</div></div>` : ''}
+      <div class="mt-5 flex gap-2 overflow-x-auto no-scrollbar">${Object.entries(filtros).map(([k, [rot, arr]]) => `<button type="button" data-acao="ped-filtro" data-filtro="${k}" class="chip ${PD.filtro === k ? 'chip-on' : ''}">${esc(rot)} (${arr.length})</button>`).join('')}</div>
+      <div class="mt-4 grid gap-3 lg:grid-cols-2">${lista.length ? lista.map(cartaoPedido).join('') : vazio(PD.filtro === 'abertos' ? `Nenhum ${l.acao} em aberto. Os novos aparecem aqui sozinhos.` : 'Nada por aqui.')}</div>`;
+    icons();
+    if (ehHoje) timerPedidos = setInterval(() => { if (S.aba === 'pedidos' && !document.hidden && !$('#modal').open) abaPedidos(); }, 20000);
+  }
+
+  function cartaoPedido(p) {
+    const R = L().fluxo.rotulos, prox = proximoStatus(p), m = minutosDesde(p.criado_em);
+    const atrasado = ABERTOS.includes(p.status) && m >= 40;
+    const fone = String(p.cliente_whatsapp);
+    return `<div class="card p-4 ${p.status === 'novo' ? 'border-brand' : atrasado ? 'border-warn/50' : ''} ${['entregue', 'cancelado'].includes(p.status) ? 'opacity-75' : ''}">
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <p class="font-display text-xl font-bold">Nº ${p.numero} <span class="text-sm font-semibold text-muted">· ${horaNoFuso(p.criado_em, fuso())}${ABERTOS.includes(p.status) ? ` · <span class="${atrasado ? 'text-warn' : ''}">${tempoTxt(m)}</span>` : ''}</span></p>
+          <p class="mt-0.5 truncate font-semibold">${esc(p.cliente_nome)} <a href="${waLink(fone)}" target="_blank" rel="noopener" class="text-sm font-normal text-brand underline">${esc(mascaraFone(fone.replace(/^55(?=\d{10,11}$)/, '')))}</a></p>
+        </div>
+        <span class="badge shrink-0 ${COR_STATUS[p.status]}">${esc(R[p.status] || p.status)}</span>
+      </div>
+      <p class="mt-2 text-sm"><b>${p.modo === 'entrega' ? '🛵 Entrega' : `🏪 ${esc(L().textos.retirada || 'Retirada')}`}</b>${p.modo === 'entrega' && p.endereco ? ` · ${esc(p.endereco)}` : ''}</p>
+      <ul class="mt-2 grid gap-1 rounded-xl bg-sunken p-3 text-sm">${(p.itens || []).map((i) => `<li><b>${i.qtd}×</b> ${esc(i.nome)} <span class="text-muted">— ${reais(i.total)}</span>${i.escolhas ? `<br><span class="text-xs text-muted">${esc(i.escolhas)}</span>` : ''}${i.obs ? `<br><span class="text-xs text-warn">Obs.: ${esc(i.obs)}</span>` : ''}</li>`).join('')}</ul>
+      <div class="mt-2 flex flex-wrap items-baseline justify-between gap-2 text-sm">
+        <span class="text-muted">${esc(p.pagamento || '—')}${p.troco ? ` · troco para R$ ${esc(p.troco)}` : ''}${Number(p.taxa) ? ` · entrega ${reais(p.taxa)}` : ''}</span>
+        <span class="font-display text-lg font-bold">${reais(p.total)}</span>
+      </div>
+      <div class="mt-3 flex flex-wrap gap-2">
+        ${prox ? `<button type="button" data-acao="ped-status" data-id="${p.id}" data-status="${prox}" class="btn btn-primary btn-sm"><i data-lucide="check" class="h-4 w-4"></i>${esc(L().fluxo.acoes[prox] || R[prox])}</button>` : ''}
+        <a href="${waLink(fone, avisoCliente(p, p.status))}" target="_blank" rel="noopener" class="btn btn-wa btn-sm"><i data-lucide="message-circle" class="h-4 w-4"></i>Avisar cliente</a>
+        ${ABERTOS.includes(p.status) ? `<button type="button" data-acao="ped-status" data-id="${p.id}" data-status="cancelado" class="btn btn-danger btn-sm">Cancelar</button>` : ''}
+        ${['entregue', 'cancelado'].includes(p.status) ? `<button type="button" data-acao="ped-status" data-id="${p.id}" data-status="${p.status === 'cancelado' ? 'novo' : (L().fluxo[p.modo] || L().fluxo.retirada).slice(-2)[0]}" class="btn btn-ghost btn-sm"><i data-lucide="rotate-ccw" class="h-4 w-4"></i>Reabrir</button>` : ''}
+      </div>
+    </div>`;
+  }
+
+  async function mudarStatusPedido(id, status) {
+    const p = PD.lista.find((x) => x.id === id);
+    if (status === 'cancelado' && !confirma(`Cancelar o nº ${p?.numero}? Ele sai da fila e não entra no total vendido.`)) return;
+    const { error } = await sb.from('pedidos').update({ status }).eq('id', id);
+    if (error) return toast(msgErro(error), 'erro');
+    toast(`Nº ${p?.numero}: ${L().fluxo.rotulos[status]}.${['entregue'].includes(status) ? '' : ' Toque em "Avisar cliente" para mandar a mensagem.'}`);
+    vigiarPedidos();
+    abaPedidos();
+  }
+
+  /* Alerta de pedido novo em qualquer aba do painel: número no menu, título da aba e um bipe */
+  let timerVigia, ultimosNovos = null;
+  function bipe() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [0, 0.18].forEach((t) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 880; o.connect(g); g.connect(ctx.destination); g.gain.setValueAtTime(0.15, ctx.currentTime + t); o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.12); });
+    } catch { /* sem som neste navegador */ }
+  }
+  async function vigiarPedidos() {
+    if (!S.neg || !pedido()) return;
+    const { data, error } = await sb.from('pedidos').select('id').eq('negocio_id', S.neg.id).eq('dia', hojeNoFuso()).eq('status', 'novo');
+    if (error || !data) return;
+    const n = data.length;
+    $$('[data-aba="pedidos"]').forEach((b) => {
+      let tag = b.querySelector('[data-novos]');
+      if (!tag) { tag = document.createElement('span'); tag.dataset.novos = ''; tag.className = 'ml-auto rounded-full bg-bad px-1.5 text-[11px] font-bold leading-5 text-white'; b.appendChild(tag); }
+      tag.textContent = n; tag.classList.toggle('hidden', !n);
+    });
+    document.title = `${n ? `(${n}) ` : ''}Painel · ${CONFIG.produto?.nome || 'Minha agenda'}`;
+    if (ultimosNovos !== null && n > ultimosNovos) {
+      bipe(); toast(n - ultimosNovos > 1 ? `${n - ultimosNovos} ${L().acao === 'reserva' ? 'reservas novas' : 'pedidos novos'}!` : `${L().acao === 'reserva' ? 'Nova reserva' : 'Novo pedido'}!`);
+      if (S.aba === 'pedidos' && !$('#modal').open) abaPedidos();
+      if (S.aba === 'inicio') abaInicioLoja();
+    }
+    ultimosNovos = n;
+  }
+  function iniciarVigia() {
+    clearInterval(timerVigia); ultimosNovos = null;
+    if (!pedido()) return;
+    vigiarPedidos();
+    timerVigia = setInterval(() => { if (!document.hidden) vigiarPedidos(); }, 20000);
   }
 
   /* =================================================================
@@ -1339,6 +1473,13 @@
         abaAgenda(); break;
       }
       case 'concluir': concluir(d.id); break;
+      case 'ped-status': mudarStatusPedido(d.id, d.status); break;
+      case 'ped-filtro': PD.filtro = d.filtro; abaPedidos(); break;
+      case 'ped-dia': {
+        const novo = isoDate(new Date(parseISO(PD.dia).getTime() + Number(d.delta) * 86400000 + 43200000));
+        if (novo <= hojeNoFuso()) { PD.dia = novo; abaPedidos(); }
+        break;
+      }
       case 'mais': $('#mais').showModal(); break;
       case 'tema': alternarTema(); break;
       case 'filtro-cli': S.filtroCli = d.f; abaClientes(); break;
@@ -1416,6 +1557,7 @@
   document.addEventListener('change', (e) => {
     const a = e.target.dataset.acaoChange;
     if (a === 'dia-escolhido' && e.target.value) { S.dia = e.target.value; abaAgenda(); }
+    if (a === 'ped-data' && e.target.value) { PD.dia = e.target.value > hojeNoFuso() ? hojeNoFuso() : e.target.value; abaPedidos(); }
     if ((a === 'per-ini' || a === 'per-fim') && e.target.value) {
       S[a === 'per-ini' ? 'perIni' : 'perFim'] = e.target.value;
       if (S.perFim < S.perIni) S.perFim = S.perIni;

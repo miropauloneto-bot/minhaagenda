@@ -93,7 +93,21 @@
         aba: 'Cardápio', acao: 'pedido', icone: 'layers', item: 'Prato', itens: 'pratos', origem: 'cardápio',
         chamada: 'Peça pelo nosso cardápio online', verTexto: 'ver o cardápio e deixar seu pedido pronto',
         textos: { sacola: 'carrinho', tituloSacola: 'Seu carrinho', verSacola: 'Ver carrinho', adicionar: 'Adicionar ao carrinho', retirada: 'Retirar no local', obs: 'Ex.: sem cebola, feijão separado' },
-        entrega: true, taxa: 5, minimo: 15, pagamentos: 'Pix, Cartão na entrega, Dinheiro', prazo: 'Entrega de 30 a 50 min · retirada em 15 min'
+        entrega: true, taxa: 5, minimo: 15, pagamentos: 'Pix, Cartão na entrega, Dinheiro', prazo: 'Entrega de 30 a 50 min · retirada em 15 min',
+        /* gestão de pedidos no painel: etapas e mensagens prontas para o cliente ({n} = nº do pedido, {nome} = cliente) */
+        fluxo: {
+          rotulos: { novo: 'Novo', preparo: 'Em preparo', saiu: 'Saiu para entrega', pronto: 'Pronto para retirar', entregue: 'Entregue', cancelado: 'Cancelado' },
+          entrega: ['novo', 'preparo', 'saiu', 'entregue'], retirada: ['novo', 'preparo', 'pronto', 'entregue'],
+          acoes: { preparo: 'Aceitar e preparar', saiu: 'Saiu para entrega', pronto: 'Pronto para retirar', entregue: 'Marcar como entregue' },
+          avisos: {
+            novo: 'Olá, {nome}! Recebemos seu pedido nº {n}. Já já começamos a preparar.',
+            preparo: 'Olá, {nome}! Seu pedido nº {n} está sendo preparado. 🍳',
+            saiu: 'Olá, {nome}! Seu pedido nº {n} saiu para entrega. 🛵',
+            pronto: 'Olá, {nome}! Seu pedido nº {n} está pronto para retirar. ✅',
+            entregue: 'Obrigado pela preferência, {nome}! Bom apetite. 😊',
+            cancelado: 'Olá, {nome}. Infelizmente seu pedido nº {n} foi cancelado. Qualquer dúvida, é só chamar.'
+          }
+        }
       },
       horarios: semana([1, 2, 3, 4, 5], '10:30', '14:30').concat([[6, '10:30', '14:00']]),
       profissionais: [],
@@ -130,7 +144,18 @@
         aba: 'Pacotes', acao: 'reserva', icone: 'map', item: 'Pacote', itens: 'pacotes', origem: 'site de passeios',
         chamada: 'Reserve seu passeio pelo nosso site', verTexto: 'ver os passeios e montar sua reserva',
         textos: { sacola: 'reserva', tituloSacola: 'Sua reserva', verSacola: 'Ver reserva', adicionar: 'Adicionar à reserva', retirada: 'Embarque no ponto combinado', obs: 'Ex.: levamos uma criança de 5 anos', unidade: 'por pessoa', quantidade: 'pessoas', linhaEntrega: false, enviar: 'Enviar reserva no WhatsApp', saudacao: 'Quero fazer uma reserva' },
-        entrega: false, taxa: 0, minimo: 0, pagamentos: 'Pix (sinal de 30%), Cartão em até 3x', prazo: 'Confirmamos a reserva pelo WhatsApp em até 2 horas'
+        entrega: false, taxa: 0, minimo: 0, pagamentos: 'Pix (sinal de 30%), Cartão em até 3x', prazo: 'Confirmamos a reserva pelo WhatsApp em até 2 horas',
+        fluxo: {
+          rotulos: { novo: 'Nova', preparo: 'Confirmada', entregue: 'Realizada', cancelado: 'Cancelada' },
+          entrega: ['novo', 'preparo', 'entregue'], retirada: ['novo', 'preparo', 'entregue'],
+          acoes: { preparo: 'Confirmar reserva', entregue: 'Marcar como realizada' },
+          avisos: {
+            novo: 'Olá, {nome}! Recebemos sua reserva nº {n}. Vamos confirmar as vagas e já te respondemos.',
+            preparo: 'Olá, {nome}! Sua reserva nº {n} está confirmada. 🧭 Te esperamos no embarque!',
+            entregue: 'Obrigado por passear com a gente, {nome}! Volte sempre. 🌞',
+            cancelado: 'Olá, {nome}. Sua reserva nº {n} foi cancelada. Qualquer dúvida, é só chamar.'
+          }
+        }
       },
       horarios: semana([1, 2, 3, 4, 5, 6], '08:00', '18:00'),
       profissionais: [],

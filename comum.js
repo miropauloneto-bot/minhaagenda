@@ -103,6 +103,7 @@ window.U = (() => {
     if (regra) return REGRAS[regra];
     if (err.code === '23505' && /slug/.test(m)) return 'Esse link já está em uso. Escolha outro.';
     if (/(faz_entrega|taxa_entrega|pedido_minimo|formas_pagamento|prazo_entrega|opcoes|preco_de|img_url|selo)/.test(m) && /column|schema cache/i.test(m)) return 'Falta rodar a atualização do banco (arquivo atualizacao-v4.sql) no Supabase. Veja o README.';
+    if (/pedidos|criar_pedido/.test(m) && /does not exist|schema cache|Could not find/i.test(m)) return 'Falta rodar a atualização do banco (arquivo atualizacao-v5.sql) no Supabase. Veja o README.';
     if (/servicos_pedido_formato|negocios_pedido_formato/.test(m)) return 'Algum campo ficou fora do formato (etiqueta muito longa, foto inválida ou preço negativo).';
     if (/Invalid login credentials/i.test(m)) return 'E-mail ou senha incorretos.';
     if (/Email not confirmed/i.test(m)) return 'Confirme seu e-mail pelo link que enviamos antes de entrar.';

@@ -16,6 +16,20 @@ Sistema completo para salões, barbearias, esmalterias e clínicas de estética,
 
 ---
 
+## Novidades da versão 5: gestão de pedidos
+
+- **Aba Pedidos (ou Reservas, nos passeios)** no painel: fila do dia por ordem de chegada, com nº do pedido, hora, há quanto tempo chegou, cliente, itens e escolhas, entrega ou retirada, endereço, pagamento, troco e total.
+- **Etapas com um toque:** Novo → Em preparo → Saiu para entrega (ou Pronto para retirar) → Entregue. Nos passeios: Nova → Confirmada → Realizada. Também dá para cancelar e reabrir.
+- **"Avisar cliente":** abre o WhatsApp do cliente com a mensagem pronta da etapa ("Seu pedido nº 12 saiu para entrega").
+- **Resumo do dia:** em aberto, quantidade, vendido, ticket médio, entregas x retiradas e o que mais saiu. Dá para ver dias anteriores.
+- **Alerta de pedido novo:** número vermelho no menu, no título da aba e um bipe, em qualquer tela do painel (a fila se atualiza a cada 20 segundos).
+- **Segurança:** o navegador do cliente manda só os itens e as escolhas. Preços, taxa e total são recalculados no banco, e o pedido ganha número sequencial do dia. Há limite de pedidos seguidos por aparelho. Só o dono vê os pedidos.
+- O cliente agora informa **nome e WhatsApp** para pedir. A página avisa que esses dados ficam com o estabelecimento, e a política de privacidade foi atualizada.
+
+**Para ativar (uma vez só):** rode no Supabase o arquivo **`atualizacao-v5.sql`** (SQL Editor › New query › Run), depois da `atualizacao-v4.sql`.
+
+---
+
 ## Novidades da versão 4: marmitarias e passeios
 
 **Dois nichos novos, nos mesmos moldes dos outros.** Aparecem na demonstração da página de vendas, na criação de negócio do painel e em "Meu negócio".
@@ -369,6 +383,7 @@ A aba **Clientes** é montada sozinha a partir dos agendamentos:
 | `catalogo.js` | Motor do cardápio/vitrine (carrinho, escolhas, mensagem do WhatsApp) |
 | `catalogo.html` · `cardapio.html` · `cardapio-dados.js` | Exemplos fixos de vitrine de salão e cardápio |
 | `atualizacao-v4.sql` | Atualização do banco para os nichos de pedido (rodar uma vez) |
+| `atualizacao-v5.sql` | Atualização do banco para a gestão de pedidos (rodar uma vez, depois da v4) |
 | `painel.html` | Painel do dono e da equipe |
 | `privacidade.html` | Política de privacidade |
 | `verificar.html` | Confere se todos os arquivos subiram |

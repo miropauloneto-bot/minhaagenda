@@ -260,7 +260,8 @@
     const obs = ($('#obs') || {}).value ? $('#obs').value.trim() : '';
     const op = atual.grupos.map((g, gi) => { const n = [...atual.marcados[gi]].sort((x, y) => x - y).map((i) => g.itens[i].nome); return n.length ? (atual.grupos.length > 1 ? `${g.titulo}: ${n.join(', ')}` : n.join(', ')) : ''; }).filter(Boolean).join(' · ');
     const chave = [atual.p.id, op, obs].join('|');
-    const linha = sacola.get(chave) || { p: atual.p, opcao: op, obs, qtd: 0, unit: unitario() };
+    const escolhas = atual.marcados.map((set) => [...set].sort((x, y) => x - y));   /* posições marcadas em cada grupo (o banco confere) */
+    const linha = sacola.get(chave) || { p: atual.p, opcao: op, escolhas, obs, qtd: 0, unit: unitario() };
     linha.qtd += atual.qtd; sacola.set(chave, linha);
     fecharFolha(); atualizarSacola(); avisar(`${atual.p.nome} adicionado`);
   }
@@ -275,11 +276,13 @@
     slot('sacola-total').textContent = brl(subtotal());
     const busca = slot('busca-campo').value; pintarLista(busca);
   }
-  const pedido = { modo: LOJA.entrega ? 'entrega' : 'retirada', nome: '', endereco: '', pagamento: LOJA.pagamentos[0], troco: '' };
+  const pedido = { modo: LOJA.entrega ? 'entrega' : 'retirada', nome: '', fone: '', endereco: '', pagamento: LOJA.pagamentos[0], troco: '' };
+  const grava = typeof LOJA.salvarPedido === 'function';   /* loja.html: o pedido fica registrado no painel do negócio */
+  const digitos = (x) => String(x || '').replace(/\D/g, '');
   function abrirSacola() {
     if (!sacola.size) return;
     const linhas = [...sacola.entries()].map(([k, l]) => `<div class="linha-sacola">
-      <div class="mini">${visual(l.p)}</div>
+      ${visual(l.p) ? `<div class="mini">${visual(l.p)}</div>` : ''}
       <div class="txt"><b>${esc(l.p.nome)}</b>${l.opcao ? `<small>${esc(l.opcao)}</small>` : ''}${l.obs ? `<small>Obs.: ${esc(l.obs)}</small>` : ''}<small><b>${brl(l.unit * l.qtd)}</b></small></div>
       <div class="passo"><button type="button" data-linha-menos="${esc(k)}" aria-label="Diminuir">${l.qtd === 1 ? icone.lixo : icone.menos}</button><output>${l.qtd}</output><button type="button" data-linha-mais="${esc(k)}" aria-label="Aumentar">${icone.mais}</button></div>
     </div>`).join('');
@@ -291,6 +294,8 @@
       </div>` : ''}
       <label class="rotulo" for="ped-nome">Seu nome</label>
       <input class="campo" id="ped-nome" data-campo="nome" autocomplete="given-name" maxlength="60" value="${esc(pedido.nome)}" placeholder="Como a loja deve te chamar">
+      ${grava ? `<label class="rotulo" for="ped-fone">Seu WhatsApp</label>
+      <input class="campo" id="ped-fone" data-campo="fone" type="tel" inputmode="tel" autocomplete="tel" maxlength="16" value="${esc(pedido.fone)}" placeholder="(85) 99999-9999">` : ''}
       <div data-slot="bloco-endereco" ${pedido.modo === 'entrega' ? '' : 'hidden'}>
         <label class="rotulo" for="ped-end">Endereço de entrega</label>
         <textarea id="ped-end" data-campo="endereco" rows="2" maxlength="200" autocomplete="street-address" placeholder="Rua, número, bairro e ponto de referência">${esc(pedido.endereco)}</textarea>
@@ -302,7 +307,10 @@
         <input class="campo" id="ped-troco" data-campo="troco" inputmode="decimal" maxlength="10" value="${esc(pedido.troco)}" placeholder="Ex.: 100">
       </div>
       <div class="totais" data-slot="totais"></div>
-      <p class="aviso">${icone.escudo}<span>Seus dados vão só na mensagem do WhatsApp para a loja. Este site não grava nome, endereço nem pedido.</span></p>`;
+      ${grava && !situacao().aberto ? `<p class="aviso" style="color:rgb(var(--bad))">${icone.relogio}<span>${esc(LOJA.nome)} está fechado agora. O pedido fica registrado e será visto quando abrir.</span></p>` : ''}
+      <p class="aviso">${icone.escudo}<span>${grava
+        ? `Seu nome, WhatsApp${LOJA.entrega ? ' e endereço' : ''} ficam com ${esc(LOJA.nome)} só para atender este pedido. <a href="privacidade.html" target="_blank" rel="noopener">Privacidade</a>`
+        : 'Seus dados vão só na mensagem do WhatsApp para a loja. Este site não grava nome, endereço nem pedido.'}</span></p>`;
     const pe = `<button type="button" class="btn btn-wa" data-acao="enviar">${icone.wa}<span>${esc(T.enviar)}</span></button>`;
     if (slot('folha').hidden) abrirFolha(T.tituloSacola, corpo, pe);
     else { slot('folha-titulo').textContent = T.tituloSacola; slot('folha-corpo').innerHTML = corpo; slot('folha-pe').innerHTML = pe; slot('folha-pe').hidden = false; }
@@ -316,25 +324,53 @@
       <div class="total"><span>Total</span><span>${brl(sub + taxa)}</span></div>
       ${faltaMin ? `<div style="color:rgb(var(--bad));font-weight:700"><span>Faltam ${brl(faltaMin)} para o pedido mínimo de ${brl(LOJA.pedidoMinimo)}</span></div>` : ''}`;
     const btn = $('[data-acao="enviar"]');
-    if (btn) btn.disabled = faltaMin > 0 || (pedido.modo === 'entrega' && pedido.endereco.trim().length < 8);
+    if (btn) btn.disabled = enviando || faltaMin > 0 || (pedido.modo === 'entrega' && pedido.endereco.trim().length < 8)
+      || (grava && (pedido.nome.trim().length < 2 || digitos(pedido.fone).length < 10));
   }
-  function mensagem() {
-    const taxa = pedido.modo === 'entrega' ? LOJA.taxaEntrega : 0;
+  function mensagem(r = {}) {
+    const taxa = r.taxa != null ? Number(r.taxa) : pedido.modo === 'entrega' ? LOJA.taxaEntrega : 0;
+    const sub = r.subtotal != null ? Number(r.subtotal) : subtotal();
     const linhas = [...sacola.values()].map((l) => `• ${qtdTxt(l.qtd)}${T.quantidade ? ' ·' : ''} ${l.p.nome}${l.opcao ? ` (${l.opcao})` : ''} — ${brl(l.unit * l.qtd)}${l.obs ? `\n   Obs.: ${l.obs}` : ''}`);
     return [
-      `Olá, ${LOJA.nome}! ${T.saudacao} pel${T.origem === 'vitrine' ? 'a' : 'o'} ${T.origem}:`, '',
+      `Olá, ${LOJA.nome}! ${T.saudacao} pel${T.origem === 'vitrine' ? 'a' : 'o'} ${T.origem}${r.numero ? ` (*nº ${r.numero}*)` : ''}:`, '',
       ...linhas, '',
-      `Subtotal: ${brl(subtotal())}`,
+      `Subtotal: ${brl(sub)}`,
       pedido.modo === 'entrega' ? `Entrega: ${taxa ? brl(taxa) : 'grátis'}` : T.linhaEntrega === false ? null : `Vou ${T.retirada.charAt(0).toLowerCase()}${T.retirada.slice(1)}`,
-      `*Total: ${brl(subtotal() + taxa)}*`, '',
+      `*Total: ${brl(sub + taxa)}*`, '',
       pedido.nome.trim() ? `Nome: ${pedido.nome.trim()}` : null,
       pedido.modo === 'entrega' ? `Endereço: ${pedido.endereco.trim()}` : null,
       `Pagamento: ${pedido.pagamento}${/dinheiro/i.test(pedido.pagamento) && pedido.troco.trim() ? ` (troco para R$ ${pedido.troco.trim()})` : ''}`
     ].filter((l) => l !== null).join('\n');
   }
-  function enviar() {
-    const url = `https://wa.me/${LOJA.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(mensagem())}`;
-    window.open(url, '_blank', 'noopener');
+  const linkWa = (r) => `https://wa.me/${LOJA.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(mensagem(r))}`;
+  let enviando = false;
+  async function enviar() {
+    if (!grava) { window.open(linkWa(), '_blank', 'noopener'); return; }
+    /* 1) grava no painel do negócio (o banco confere preços e escolhas)  2) mostra o nº e o botão do WhatsApp */
+    const btn = $('[data-acao="enviar"]');
+    enviando = true; btn.disabled = true; btn.querySelector('span').textContent = 'Enviando…';
+    try {
+      const r = await LOJA.salvarPedido({
+        itens: [...sacola.values()].map((l) => ({ id: l.p.id, qtd: l.qtd, escolhas: l.escolhas || [], obs: l.obs || '' })),
+        nome: pedido.nome.trim(), fone: digitos(pedido.fone), modo: pedido.modo, endereco: pedido.endereco.trim(),
+        pagamento: pedido.pagamento, troco: /dinheiro/i.test(pedido.pagamento) ? pedido.troco.trim() : ''
+      });
+      const url = linkWa(r);
+      const total = r.total != null ? Number(r.total) : subtotal() + (pedido.modo === 'entrega' ? LOJA.taxaEntrega : 0);
+      sacola.clear(); atualizarSacola();
+      slot('folha-titulo').textContent = T.sacola === 'reserva' ? `Reserva nº ${r.numero} recebida!` : `Pedido nº ${r.numero} recebido!`;
+      slot('folha-corpo').innerHTML = `<div style="text-align:center;padding:1rem 0">
+          <p style="font-size:3rem;margin:0">✅</p>
+          <p style="font-family:var(--display);font-weight:800;font-size:1.5rem;margin:.4rem 0">Nº ${esc(r.numero)} · ${brl(total)}</p>
+          <p style="color:rgb(var(--muted));margin:0 auto;max-width:22rem">${esc(LOJA.nome)} já recebeu ${T.sacola === 'reserva' ? 'sua reserva' : 'seu pedido'} no painel. Toque abaixo para mandar a confirmação no WhatsApp e acompanhar por lá.</p>
+        </div>`;
+      slot('folha-pe').innerHTML = `<a class="btn btn-wa" href="${esc(url)}" target="_blank" rel="noopener" style="text-decoration:none">${icone.wa}<span>${esc(T.enviar)}</span></a>`;
+    } catch (e) {
+      avisar(e && e.message ? e.message : 'Não foi possível enviar. Tente de novo.', 5000);
+      btn.querySelector('span').textContent = T.enviar;
+    } finally {
+      enviando = false; atualizarTotais && slot('totais') && atualizarTotais();
+    }
   }
 
   /* informação */
@@ -354,7 +390,7 @@
   }
 
   let tToast;
-  function avisar(txt) { const t = slot('toast'); t.textContent = txt; t.classList.add('mostrar'); clearTimeout(tToast); tToast = setTimeout(() => t.classList.remove('mostrar'), 1800); }
+  function avisar(txt, ms = 1800) { const t = slot('toast'); t.textContent = txt; t.classList.add('mostrar'); clearTimeout(tToast); tToast = setTimeout(() => t.classList.remove('mostrar'), ms); }
 
   /* ---------------- eventos ---------------- */
   document.addEventListener('click', (e) => {
@@ -393,7 +429,7 @@
   });
   document.addEventListener('input', (e) => {
     const c = e.target.dataset.campo;
-    if (c === 'nome' || c === 'endereco' || c === 'troco') { pedido[c] = e.target.value; if (c === 'endereco') atualizarTotais(); }
+    if (c === 'nome' || c === 'fone' || c === 'endereco' || c === 'troco') { pedido[c] = e.target.value; if (c !== 'troco') atualizarTotais(); }
     if (e.target === slot('busca-campo')) pintarLista(e.target.value);
   });
   slot('abas').addEventListener('click', (e) => {
