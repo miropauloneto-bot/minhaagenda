@@ -597,6 +597,39 @@
     abaPedidos();
   }
 
+  /* Completa o cardápio com o exemplo do nicho: itens que faltam, ou só as escolhas */
+  async function completarCardapio(soEscolhas) {
+    const modelo = nichoPorId(S.neg.nicho).servicos;
+    const { data, error } = await sb.from('servicos').select('id,nome,opcoes').eq('negocio_id', S.neg.id);
+    if (error) return toast(msgErro(error), 'erro');
+    const porNome = new Map(data.map((x) => [U.slugify(x.nome), x]));
+    let feitos = 0;
+    if (soEscolhas) {
+      for (const m of modelo) {
+        const x = porNome.get(U.slugify(m.nome));
+        if (!x || (x.opcoes || []).length || !(m.opcoes || []).length) continue;
+        const r = await sb.from('servicos').update({ opcoes: m.opcoes }).eq('id', x.id);
+        if (r.error) return toast(msgErro(r.error), 'erro');
+        feitos++;
+      }
+      toast(feitos ? `Escolhas adicionadas em ${feitos} item(ns). Confira e ajuste em "editar".` : 'Nada a completar.');
+    } else {
+      const ordem0 = data.length;
+      const novos = modelo.filter((m) => !porNome.has(U.slugify(m.nome))).map((m, i) => {
+        const o = { negocio_id: S.neg.id, nome: m.nome, descricao: m.descricao || '', duracao_min: 30, preco: m.preco, categoria: m.categoria || 'Outros', ordem: ordem0 + i };
+        if (m.opcoes) o.opcoes = m.opcoes; if (m.preco_de) o.preco_de = m.preco_de; if (m.selo) o.selo = m.selo;
+        return o;
+      });
+      if (!novos.length) return toast('Nada a completar.');
+      if (!confirma(`Adicionar ${novos.length} ${L().itens} do exemplo? Depois você ajusta preços e apaga o que não vende.`)) return;
+      const r = await sb.from('servicos').insert(novos);
+      if (r.error) return toast(msgErro(r.error), 'erro');
+      toast(`${novos.length} ${L().itens} adicionados. Ajuste os preços.`);
+    }
+    await recarregarBase();
+    abrirAba('servicos');
+  }
+
   /* Alerta de pedido novo em qualquer aba do painel: número no menu, título da aba e um bipe */
   let timerVigia, ultimosNovos = null;
   function bipe() {
@@ -1044,6 +1077,20 @@
       return {
         tabela: 'servicos', titulo: l.aba,
         texto: `Os ${l.itens} que aparecem na sua página. Cada categoria vira uma aba. Quando algo acabar, desmarque "Disponível" em vez de excluir.`,
+        /* Ajuda para completar o cardápio a partir do exemplo do nicho */
+        aviso: (data) => {
+          const modelo = nichoPorId(S.neg.nicho).servicos, nomes = new Set(data.map((x) => U.slugify(x.nome)));
+          const faltam = modelo.filter((x) => !nomes.has(U.slugify(x.nome)));
+          const semEscolha = data.filter((x) => !(x.opcoes || []).length && modelo.some((m) => (m.opcoes || []).length && U.slugify(m.nome) === U.slugify(x.nome)));
+          const partes = [];
+          if (semEscolha.length) partes.push(`<div class="card flex flex-wrap items-center justify-between gap-3 border-warn/40 p-4">
+            <p class="text-ink"><b>${esc(semEscolha.map((x) => x.nome).join(' e '))}</b> ${semEscolha.length > 1 ? 'estão' : 'está'} sem escolhas: o cliente não consegue escolher ${l.acao === 'reserva' ? 'data e opções' : 'proteína e guarnições'}.</p>
+            <button type="button" data-acao="prod-escolhas" class="btn btn-primary btn-sm"><i data-lucide="list-checks" class="h-4 w-4"></i>Usar as escolhas do exemplo</button></div>`);
+          if (faltam.length) partes.push(`<div class="card flex flex-wrap items-center justify-between gap-3 p-4">
+            <p class="text-ink">O exemplo de ${esc(nichoPorId(S.neg.nicho).rotulo.split(' & ')[0].toLowerCase())} tem mais ${faltam.length} ${esc(l.itens)} que você não cadastrou (${esc(faltam.slice(0, 4).map((x) => x.nome).join(', '))}${faltam.length > 4 ? '…' : ''}).</p>
+            <button type="button" data-acao="prod-exemplos" class="btn btn-soft btn-sm"><i data-lucide="plus" class="h-4 w-4"></i>Adicionar os ${faltam.length} do exemplo</button></div>`);
+          return partes.join('');
+        },
         fixos: { duracao_min: 30 },
         campos: [
           { k: 'nome', r: `Nome do ${l.item.toLowerCase()}`, req: true },
@@ -1474,6 +1521,7 @@
       }
       case 'concluir': concluir(d.id); break;
       case 'ped-status': mudarStatusPedido(d.id, d.status); break;
+      case 'prod-exemplos': case 'prod-escolhas': completarCardapio(d.acao === 'prod-escolhas'); break;
       case 'ped-filtro': PD.filtro = d.filtro; abaPedidos(); break;
       case 'ped-dia': {
         const novo = isoDate(new Date(parseISO(PD.dia).getTime() + Number(d.delta) * 86400000 + 43200000));

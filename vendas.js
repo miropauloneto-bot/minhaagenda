@@ -53,37 +53,26 @@
   slot('faixa-nichos', Object.values(NICHOS).map((n) => `<span class="flex shrink-0 items-center gap-2 rounded-full bg-sunken px-4 py-2"><span class="h-2.5 w-2.5 rounded-full" style="background:${U.rgbParaHex(n.tema.brand)}"></span>${esc(n.rotulo)}</span>`).join(''));
 
   /* ---------- Demonstração: amostras de cor que trocam o celular ----------
-     Duas telas empilhadas: a nova carrega por trás enquanto a "varredura" na cor do
-     nicho cobre a troca; quando ela termina de carregar, entra com desfoque que some.
+     Duas telas empilhadas: a nova carrega escondida por trás e só aparece pronta
+     (sem tela branca). O brilho em volta do celular muda para a cor do nicho.
      Cliques rápidos só valem pelo último (token). */
   const aparelho = $('[data-slot="demo-aparelho"]');
   const camadas = $$('[data-camada]');
-  let frente = 0, token = 0, nichoAtual = null, timerTexto;
+  let frente = 0, token = 0, nichoAtual = null;
   const quadro = (i) => camadas[i].querySelector('iframe');
-  function trocarTela(url, n) {
+  function trocarTela(url) {
     const meu = ++token, atras = 1 - frente;
-    if (reduzMovimento || !nichoAtual) {              /* primeira tela: sem efeito */
-      quadro(frente).src = url; return;
-    }
-    $('[data-slot="demo-hud-icone"]').textContent = n.emoji;
-    $('[data-slot="demo-hud-texto"]').textContent = `Montando ${n.rotulo.split(' & ')[0].split(' de ')[0].toLowerCase()}`;
-    aparelho.classList.add('trocando');
-    const inicio = performance.now();
+    if (!nichoAtual) { quadro(frente).src = url; return; }   /* primeira tela */
     const f = quadro(atras);
     const pronto = () => {
-      if (meu !== token) return;                      /* o usuário já escolheu outro */
-      const espera = Math.max(0, 520 - (performance.now() - inicio));   /* a varredura completa pelo menos uma passada */
-      setTimeout(() => {
-        if (meu !== token) return;
-        camadas[frente].dataset.estado = 'saindo'; camadas[frente].setAttribute('aria-hidden', 'true'); quadro(frente).tabIndex = -1;
-        camadas[atras].dataset.estado = 'frente'; camadas[atras].removeAttribute('aria-hidden'); f.removeAttribute('tabindex');
-        const velha = frente; frente = atras;
-        aparelho.classList.remove('trocando');
-        setTimeout(() => { if (meu === token) camadas[velha].dataset.estado = 'atras'; }, 260);
-      }, espera);
+      if (meu !== token) return;                     /* o usuário já escolheu outro */
+      /* troca direta: a tela antiga fica à mostra até a nova estar pronta (nada apaga) */
+      camadas[frente].dataset.estado = 'atras'; camadas[frente].setAttribute('aria-hidden', 'true'); quadro(frente).tabIndex = -1;
+      camadas[atras].dataset.estado = 'frente'; camadas[atras].removeAttribute('aria-hidden'); f.removeAttribute('tabindex');
+      frente = atras;
     };
-    f.onload = pronto;
-    setTimeout(pronto, 4000);                          /* rede lenta: não deixa a varredura presa */
+    f.onload = () => setTimeout(pronto, 120);         /* dá tempo de a página nova desenhar */
+    setTimeout(pronto, 4000);
     f.src = url;
   }
   function escolherNicho(id, foco) {
@@ -92,7 +81,7 @@
     $$('[data-nicho]').forEach((b) => { const on = b.dataset.nicho === id; b.setAttribute('aria-checked', on); b.querySelector('[data-anel]').classList.toggle('ring-4', on); });
     const pagina = n.modo === 'pedido' ? 'loja' : 'agendar';      /* marmitaria e passeios: cardápio com pedido no WhatsApp */
     aparelho.style.setProperty('--demo-cor', U.rgbParaHex(n.tema.brand));
-    trocarTela(`${pagina}.html?demo=${id}`, n);
+    trocarTela(`${pagina}.html?demo=${id}`);
     $('[data-slot="demo-link"]').href = `${pagina}.html?demo=${id}`;
     const escrever = () => {
       $('[data-slot="demo-titulo"]').textContent = `${n.emoji} ${n.rotulo}`;
@@ -100,10 +89,7 @@
         ? `${n.loja.aba} com ${n.loja.acao} pelo WhatsApp: já vem com ${n.servicos.length} ${n.loja.itens} de exemplo, com escolhas e horários. Você troca tudo pelo painel.`
         : `Já vem com ${n.servicos.length} serviços, ${n.profissionais.length} profissional(is) e horários de exemplo. Você troca tudo pelo painel.`;
     };
-    const caixa = $('[data-slot="demo-texto"]');
-    clearTimeout(timerTexto);
-    if (reduzMovimento || !nichoAtual) escrever();
-    else { caixa.classList.add('trocando'); timerTexto = setTimeout(() => { escrever(); caixa.classList.remove('trocando'); }, 180); }
+    escrever();
     nichoAtual = id;
     if (foco) $(`[data-nicho="${id}"]`).focus();
   }

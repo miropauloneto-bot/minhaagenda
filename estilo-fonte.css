@@ -129,43 +129,13 @@
 }
 
 /* ---------- Demonstração: troca de nicho no celular ----------
-   Tela nova carrega por baixo; enquanto isso uma "varredura" na cor do nicho
-   cobre a troca, e a tela nova entra com desfoque que some (sem piscar branco). */
+   A tela nova carrega escondida e aparece pronta; o brilho muda para a cor do nicho. */
 @property --demo-cor { syntax: '<color>'; inherits: true; initial-value: #3d35f5; }
 .demo-aparelho { --demo-cor: #3d35f5; transition: --demo-cor .6s var(--ease-out); }
 .demo-brilho { position: absolute; inset: -3rem -3.5rem; z-index: -1; border-radius: 5rem; pointer-events: none;
   background: radial-gradient(closest-side, color-mix(in srgb, var(--demo-cor) 50%, transparent) 62%, transparent); filter: blur(22px); opacity: .85; }
-.demo-camada { position: absolute; inset: 0; transition: opacity .32s var(--ease-out), transform .45s var(--ease-out), filter .32s var(--ease-out); }
-.demo-camada[data-estado="atras"] { opacity: 0; transform: scale(1.04); filter: blur(10px); pointer-events: none; }
-.demo-camada[data-estado="saindo"] { opacity: 0; transform: scale(.96); filter: blur(6px); pointer-events: none; transition-duration: .2s; }
-.demo-scan { position: absolute; inset: 0; z-index: 5; display: grid; place-content: center; justify-items: center; gap: .75rem; overflow: hidden; pointer-events: none;
-  opacity: 0; transition: opacity .18s var(--ease-out);
-  background: color-mix(in srgb, var(--demo-cor) 8%, rgb(255 255 255 / .55));
-  -webkit-backdrop-filter: blur(6px) saturate(1.2); backdrop-filter: blur(6px) saturate(1.2); }
-.demo-scan::before { content: ''; position: absolute; inset: 0; opacity: .55;
-  background-image: linear-gradient(color-mix(in srgb, var(--demo-cor) 22%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--demo-cor) 22%, transparent) 1px, transparent 1px);
-  background-size: 22px 22px; -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 30%, transparent 75%); mask-image: radial-gradient(circle at 50% 50%, #000 30%, transparent 75%); }
-.demo-scan::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 40%; transform: translateY(-110%);
-  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--demo-cor) 35%, transparent) 85%, color-mix(in srgb, var(--demo-cor) 90%, #fff) 99%, transparent); }
-.demo-aparelho.trocando .demo-scan { opacity: 1; }
-.demo-aparelho.trocando .demo-scan::after { animation: varrer .9s cubic-bezier(.77, 0, .175, 1) infinite; }
-.demo-hud { position: relative; display: grid; justify-items: center; gap: .6rem; transform: translateY(6px) scale(.96); opacity: 0;
-  transition: transform .3s var(--ease-out), opacity .2s var(--ease-out); }
-.demo-aparelho.trocando .demo-hud { transform: none; opacity: 1; transition-delay: .06s; }
-.demo-hud-icone { display: grid; place-items: center; width: 3.5rem; height: 3.5rem; border-radius: 1.1rem; font-size: 1.75rem; color: #fff;
-  background: var(--demo-cor); box-shadow: 0 0 0 6px color-mix(in srgb, var(--demo-cor) 18%, transparent), 0 14px 30px -10px var(--demo-cor); }
-.demo-hud-texto { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .7rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: rgb(27 26 61 / .8); }
-.demo-hud-barra { width: 7rem; height: 3px; border-radius: 99px; overflow: hidden; background: color-mix(in srgb, var(--demo-cor) 18%, transparent); }
-.demo-hud-barra i { display: block; height: 100%; width: 40%; border-radius: inherit; background: var(--demo-cor); animation: carregar .9s var(--ease-out) infinite; }
-.demo-texto { transition: opacity .2s var(--ease-out), filter .2s var(--ease-out), transform .2s var(--ease-out); }
-.demo-texto.trocando { opacity: 0; filter: blur(3px); transform: translateY(3px); }
-@keyframes varrer { to { transform: translateY(260%); } }
-@keyframes carregar { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
-@media (prefers-reduced-motion: reduce) {
-  .demo-camada[data-estado] { transform: none !important; filter: none !important; }
-  .demo-scan::after, .demo-hud-barra i { animation: none !important; }
-  .demo-hud { transform: none; }
-}
+.demo-camada { position: absolute; inset: 0; }
+.demo-camada[data-estado="atras"] { visibility: hidden; pointer-events: none; }
 
 /* Grade de 1 coluna que nunca estoura no celular (qualquer grid-cols-* sobrescreve) */
 :where(.grid) { grid-template-columns: minmax(0, 1fr); }
