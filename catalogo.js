@@ -263,7 +263,7 @@
     const escolhas = atual.marcados.map((set) => [...set].sort((x, y) => x - y));   /* posições marcadas em cada grupo (o banco confere) */
     const linha = sacola.get(chave) || { p: atual.p, opcao: op, escolhas, obs, qtd: 0, unit: unitario() };
     linha.qtd += atual.qtd; sacola.set(chave, linha);
-    fecharFolha(); atualizarSacola(); avisar(`${atual.p.nome} adicionado`);
+    fecharFolha(); atualizarSacola(); avisar(`${atual.p.nome.length > 34 ? atual.p.nome.slice(0, 32).trimEnd() + '…' : atual.p.nome} adicionado`);
   }
 
   /* sacola */

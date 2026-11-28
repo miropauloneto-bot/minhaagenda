@@ -16,6 +16,14 @@ Sistema completo para salões, barbearias, esmalterias e clínicas de estética,
 
 ---
 
+## Novidades da versão 5.1: acabamento e celular
+
+- **Troca de nicho na demonstração** com transição: a tela nova carrega por trás enquanto uma varredura na cor do nicho (grade, linha de luz e "Montando…") cobre a troca, e o brilho em volta do celular muda de cor. Quem pede menos movimento no aparelho vê só um esmaecimento.
+- **Celular:** sem o flash cinza ao tocar, toque sem atraso, botões que afundam no toque, hover que não fica preso, campos que não dão zoom no iPhone, conteúdo fora do entalhe da câmera e altura certa com a barra do navegador.
+- **Textos longos** (nome de prato sem espaço, opção comprida) quebram a linha em vez de empurrar a página.
+
+---
+
 ## Novidades da versão 5: gestão de pedidos
 
 - **Aba Pedidos (ou Reservas, nos passeios)** no painel: fila do dia por ordem de chegada, com nº do pedido, hora, há quanto tempo chegou, cliente, itens e escolhas, entrega ou retirada, endereço, pagamento, troco e total.

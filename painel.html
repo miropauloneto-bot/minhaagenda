@@ -7,7 +7,8 @@
   <meta name="referrer" content="no-referrer">
   <meta name="robots" content="noindex, nofollow">
   <title>Painel · MinhaAgenda</title>
-  <meta name="theme-color" content="#3d35f5">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#1b1a3d">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0e0d22">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <script src="tema-escuro.js"></script>
   <link rel="stylesheet" href="app.css">
@@ -65,8 +66,8 @@
   </dialog>
 
   <!-- Janela de formulário reaproveitável -->
-  <dialog id="modal" class="w-[min(94vw,560px)] max-h-[90vh] rounded-[1.5rem] bg-surface p-0">
-    <form method="dialog" id="modal-form" class="flex max-h-[90vh] flex-col">
+  <dialog id="modal" class="w-[min(94vw,560px)] max-h-[90dvh] rounded-[1.5rem] bg-surface p-0">
+    <form method="dialog" id="modal-form" class="flex max-h-[90dvh] flex-col">
       <div class="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
         <p class="font-display text-lg font-bold" data-slot="modal-titulo"></p>
         <button value="cancelar" formnovalidate class="btn btn-ghost btn-icon !border-0" aria-label="Fechar"><i data-lucide="x" class="h-5 w-5"></i></button>

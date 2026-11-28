@@ -1,5 +1,7 @@
 /* Cores ligadas às variáveis CSS: cada negócio troca o tema sem recompilar. */
 module.exports = {
+  /* hover: só vale em aparelho com mouse (no celular o hover fica preso depois do toque) */
+  future: { hoverOnlyWhenSupported: true },
   content: ['./*.html', './{config,nichos,comum,vendas,agendar,painel,tema-escuro,privacidade}.js'],
   darkMode: ['class', '[data-tema="escuro"]'],
   theme: {

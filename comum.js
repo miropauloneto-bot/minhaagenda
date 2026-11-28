@@ -53,8 +53,9 @@ window.U = (() => {
     Object.entries(mapa).forEach(([k, v]) => t[k] && root.setProperty(v, t[k]));
     const fontes = { serif: "'Fraunces'", condensed: "'Oswald'", sans: "'Bricolage Grotesque'" };
     root.setProperty('--font-display', fontes[t.fonte] || fontes.sans);
-    const meta = $('meta[name="theme-color"]');
-    if (meta && t.brand) meta.content = rgbParaHex(t.brand);
+    /* barra do celular na cor do topo da página (o cabeçalho usa o fundo); o painel tem as suas, por tema */
+    const meta = $('meta[name="theme-color"]:not([media])');
+    if (meta && t.bg) meta.content = rgbParaHex(t.bg);
   }
 
   /* ---------- Supabase ---------- */

@@ -7,7 +7,7 @@
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>MinhaAgenda · Agenda online para salões, barbearias e estética</title>
   <meta name="description" content="Seus clientes marcam sozinhos pelo link da bio. Agenda sem conflito, comissão da equipe e financeiro no celular. Para salões, barbearias, esmalterias e clínicas de estética.">
-  <meta name="theme-color" content="#3d35f5">
+  <meta name="theme-color" content="#1b1a3d">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="pt_BR">
@@ -100,16 +100,31 @@
           <p class="lead">É a página que vai na bio do Instagram. Teste como cliente: escolha serviço, profissional e horário. Nada é gravado.</p>
           <div class="mt-8 grid grid-cols-3 gap-3 sm:grid-cols-6" role="radiogroup" aria-label="Tipo de negócio" data-slot="amostras"></div>
           <div class="mt-8 card elevado p-5">
-            <p class="font-display text-xl font-bold" data-slot="demo-titulo"></p>
-            <p class="mt-1 text-sm text-muted" data-slot="demo-detalhe"></p>
+            <div class="demo-texto" data-slot="demo-texto">
+              <p class="font-display text-xl font-bold" data-slot="demo-titulo"></p>
+              <p class="mt-1 text-sm text-muted" data-slot="demo-detalhe"></p>
+            </div>
             <a data-slot="demo-link" target="_blank" rel="noopener" class="btn btn-soft btn-sm mt-4"><i data-lucide="maximize-2" class="h-4 w-4"></i>Abrir em tela cheia</a>
           </div>
         </div>
         <div class="mx-auto">
-          <div class="relative h-[620px] w-[310px] rounded-[3rem] bg-ink p-[10px] shadow-[0_40px_80px_-30px_rgb(27_26_61/.55)]">
+          <div class="demo-aparelho relative isolate h-[620px] w-[310px] rounded-[3rem] bg-ink p-[10px] shadow-[0_40px_80px_-30px_rgb(27_26_61/.55)]" data-slot="demo-aparelho">
+            <div class="demo-brilho" aria-hidden="true"></div>
             <div class="absolute left-1/2 top-[18px] z-10 h-6 w-24 -translate-x-1/2 rounded-full bg-ink"></div>
-            <div class="h-full w-full overflow-hidden rounded-[2.4rem] bg-white">
-              <iframe data-slot="demo-frame" title="Demonstração da página de agendamento" class="h-[833px] w-[390px] origin-top-left scale-[.743] border-0" loading="lazy"></iframe>
+            <div class="relative h-full w-full overflow-hidden rounded-[2.4rem] bg-white">
+              <div class="demo-camada" data-estado="frente" data-camada="0">
+                <iframe data-slot="demo-frame" title="Demonstração da página do cliente" class="h-[833px] w-[390px] origin-top-left scale-[.743] border-0" loading="lazy"></iframe>
+              </div>
+              <div class="demo-camada" data-estado="atras" data-camada="1" aria-hidden="true">
+                <iframe title="Demonstração da página do cliente" class="h-[833px] w-[390px] origin-top-left scale-[.743] border-0" tabindex="-1"></iframe>
+              </div>
+              <div class="demo-scan" aria-hidden="true">
+                <div class="demo-hud">
+                  <span class="demo-hud-icone" data-slot="demo-hud-icone"></span>
+                  <span class="demo-hud-texto" data-slot="demo-hud-texto">Montando página</span>
+                  <span class="demo-hud-barra"><i></i></span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
